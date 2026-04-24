@@ -65,7 +65,7 @@ def main() -> int:
         match_id = row["match_id"]
         try:
             payload = client.fetch_match_metadata(match_id)
-            match_view = build_match_view(payload)
+            match_view = build_match_view(payload, hero_resolver=client.get_hero_name)
         except (DeadlockApiError, ValueError) as exc:
             print(f"[{attempted}] match={match_id} failed: {exc}", file=sys.stderr)
             time.sleep(args.sleep_seconds)
@@ -125,7 +125,7 @@ def rewrite_jsonl(path: Path, client: DeadlockApiClient, updated_match_ids: set[
         if match_id in updated_match_ids:
             try:
                 full_payload = client.fetch_match_metadata(match_id)
-                match_view = build_match_view(full_payload)
+                match_view = build_match_view(full_payload, hero_resolver=client.get_hero_name)
                 payload = match_view_to_dict(match_view)
             except (DeadlockApiError, ValueError):
                 pass

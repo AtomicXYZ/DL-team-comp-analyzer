@@ -124,6 +124,7 @@ def run_exact_match_id_mode(
             existing_match_ids=existing_match_ids,
             jsonl_path=jsonl_path,
             csv_path=csv_path,
+            hero_resolver=client.get_hero_name,
         )
         added += added_in_batch
         print(f"[batch {batch_index}] requested={len(batch_ids)} added={added_in_batch} total_added={added}")
@@ -183,6 +184,7 @@ def run_paged_mode(
             existing_match_ids=existing_match_ids,
             jsonl_path=jsonl_path,
             csv_path=csv_path,
+            hero_resolver=client.get_hero_name,
         )
         added += added_in_batch
         batch_index += 1
@@ -221,6 +223,7 @@ def persist_payload_matches(
     existing_match_ids: set[str],
     jsonl_path: Path,
     csv_path: Path,
+    hero_resolver,
 ) -> int:
     match_payloads = extract_match_payloads(payload)
     if not match_payloads:
@@ -241,7 +244,7 @@ def persist_payload_matches(
 
         for raw_match in match_payloads:
             try:
-                match_view = build_match_view(raw_match)
+                match_view = build_match_view(raw_match, hero_resolver=hero_resolver)
             except ValueError:
                 continue
 

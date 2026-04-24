@@ -95,11 +95,17 @@ def build_match_view(
             )
         )
 
-    if len(ordered_team_keys) < 2:
-        ordered_team_keys = list(grouped.keys())
+    if "team_1" in grouped:
+        team_1_key = "team_1"
+    else:
+        team_1_key = ordered_team_keys[0] if ordered_team_keys else "team_1"
 
-    team_1_key = ordered_team_keys[0]
-    team_2_key = ordered_team_keys[1] if len(ordered_team_keys) > 1 else "team_2"
+    if "team_2" in grouped:
+        team_2_key = "team_2"
+    else:
+        fallback_keys = [key for key in ordered_team_keys if key != team_1_key]
+        team_2_key = fallback_keys[0] if fallback_keys else "team_2"
+
     grouped[team_1_key] = _sorted_players(grouped.get(team_1_key, []))
     grouped[team_2_key] = _sorted_players(grouped.get(team_2_key, []))
 
@@ -435,16 +441,36 @@ def _extract_player_slot(player: dict[str, Any]) -> int | None:
 def _extract_team_key(player: dict[str, Any], fallback: str) -> str:
     value = _pick_first(player, "team", "team_id", "player_team", "side", "side_id")
     if value is None:
-        return fallback
+        return _canonical_team_key(fallback)
 
     if isinstance(value, str):
         lowered = value.strip().lower().replace(" ", "_")
         if lowered:
-            return lowered
-        return fallback
+            return _canonical_team_key(lowered)
+        return _canonical_team_key(fallback)
 
     if isinstance(value, bool):
-        return "team_1" if value else "team_2"
+        return "team_2" if value else "team_1"
+
+    if isinstance(value, (int, float)):
+        return _canonical_team_key(int(value))
+
+    return _canonical_team_key(fallback)
+
+
+def _canonical_team_key(value: Any) -> str:
+    if isinstance(value, str):
+        normalized = value.strip().lower().replace(" ", "_")
+        if normalized in {"team0", "team_0", "0", "team_a", "hidden_king", "archon"}:
+            return "team_1"
+        if normalized in {"team1", "team_1", "1", "team_b", "archmother", "eternus"}:
+            return "team_2"
+        if normalized == "team_2":
+            return "team_2"
+        return normalized or "team_1"
+
+    if isinstance(value, bool):
+        return "team_2" if value else "team_1"
 
     if isinstance(value, (int, float)):
         if int(value) == 0:
@@ -453,15 +479,13 @@ def _extract_team_key(player: dict[str, Any], fallback: str) -> str:
             return "team_2"
         return f"team_{int(value)}"
 
-    return fallback
+    return "team_1"
 
 
 def _humanize_team_label(team_key: str, fallback: str) -> str:
     known = {
         "team_1": "Team 1",
         "team_2": "Team 2",
-        "team0": "Team 1",
-        "team1": "Team 2",
         "hidden_king": "Hidden King",
         "archmother": "Archmother",
         "archon": "Archon",
@@ -482,7 +506,7 @@ def _format_winner(winner: Any, team_1_key: str, team_2_key: str) -> str:
             team_1_key,
             team_1_key.replace("_", ""),
             "team_1",
-            "team1" if team_1_key == "team_2" else "team0",
+            "team0",
             "0",
         }
         team_2_aliases = {
