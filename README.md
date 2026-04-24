@@ -79,6 +79,19 @@ python scripts/fetch_player_match_ids.py --account-id 17964440 --account-id 9261
 python scripts/fetch_bulk_summaries.py --match-ids-file data/processed/seed_match_ids.txt --batch-size 100
 ```
 
+Merge Statlocker profile ranks into the already collected dataset without re-fetching matches:
+
+```bash
+cp .env.example .env
+# put your real Statlocker key in .env as STATLOCKER_API_KEY=...
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/enrich_statlocker_ranks.py --jsonl-only
+```
+
+This script does not call the Statlocker match endpoints. It reads existing `account_id`s from
+`match_summaries.jsonl`, fetches unique profile ranks in batches of up to `100` accounts, stores a
+local cache in `data/processed/statlocker_profile_ranks.json`, and writes the rank back into each
+player entry.
+
 ## Notes
 
 - The Deadlock API endpoints used here are based on the public match metadata and assets APIs:

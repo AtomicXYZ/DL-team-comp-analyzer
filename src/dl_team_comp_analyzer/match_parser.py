@@ -40,7 +40,7 @@ class PlayerView:
     account_id: str
     hero_id: str
     hero_name: str
-    rank: str
+    pp_score: str
     team_key: str
     player_slot: int | None
 
@@ -89,7 +89,7 @@ def build_match_view(
                 account_id=_extract_account_id(raw_player, index=index),
                 hero_id="" if hero_id is None else str(hero_id),
                 hero_name=hero_lookup(hero_id),
-                rank=_extract_rank(raw_player),
+                pp_score=_extract_pp_score(raw_player),
                 team_key=team_key,
                 player_slot=_extract_player_slot(raw_player),
             )
@@ -180,6 +180,10 @@ def format_match_view(match_view: MatchView) -> str:
 def match_view_to_dataset_row(match_view: MatchView) -> dict[str, str]:
     team_1_heroes = _hero_columns(match_view.team_1_players, prefix="team_1")
     team_2_heroes = _hero_columns(match_view.team_2_players, prefix="team_2")
+    team_1_accounts = _account_columns(match_view.team_1_players, prefix="team_1")
+    team_2_accounts = _account_columns(match_view.team_2_players, prefix="team_2")
+    team_1_pp_scores = _pp_score_columns(match_view.team_1_players, prefix="team_1")
+    team_2_pp_scores = _pp_score_columns(match_view.team_2_players, prefix="team_2")
 
     return {
         "match_id": match_view.match_id,
@@ -193,6 +197,10 @@ def match_view_to_dataset_row(match_view: MatchView) -> dict[str, str]:
         "team_2_average_badge": match_view.team_2_average_badge,
         **team_1_heroes,
         **team_2_heroes,
+        **team_1_accounts,
+        **team_2_accounts,
+        **team_1_pp_scores,
+        **team_2_pp_scores,
     }
 
 
@@ -209,7 +217,56 @@ def dataset_fieldnames() -> list[str]:
         "team_2_average_badge",
         *[f"team_1_hero_{index}" for index in range(1, 7)],
         *[f"team_2_hero_{index}" for index in range(1, 7)],
+        *[f"team_1_account_{index}" for index in range(1, 7)],
+        *[f"team_2_account_{index}" for index in range(1, 7)],
+        *[f"team_1_pp_score_{index}" for index in range(1, 7)],
+        *[f"team_2_pp_score_{index}" for index in range(1, 7)],
     ]
+
+
+def summary_payload_to_dataset_row(summary: dict[str, Any]) -> dict[str, str]:
+    team_1_players = summary.get("team_1_players")
+    team_2_players = summary.get("team_2_players")
+    team_1_heroes = _player_value_columns(team_1_players, prefix="team_1", key="hero_id", fallback="")
+    team_2_heroes = _player_value_columns(team_2_players, prefix="team_2", key="hero_id", fallback="")
+    team_1_accounts = _player_value_columns(
+        team_1_players, prefix="team_1", key="account_id", fallback=""
+    )
+    team_2_accounts = _player_value_columns(
+        team_2_players, prefix="team_2", key="account_id", fallback=""
+    )
+    team_1_pp_scores = _player_value_columns(
+        team_1_players,
+        prefix="team_1",
+        key="pp_score",
+        fallback="Unknown",
+        fallback_keys=("rank",),
+    )
+    team_2_pp_scores = _player_value_columns(
+        team_2_players,
+        prefix="team_2",
+        key="pp_score",
+        fallback="Unknown",
+        fallback_keys=("rank",),
+    )
+
+    return {
+        "match_id": str(summary.get("match_id", "")),
+        "start_time_s": _string_or_empty(summary.get("start_time_s")),
+        "start_time_utc": _string_or_empty(summary.get("start_time_utc")),
+        "patch": _string_or_empty(summary.get("patch")),
+        "patch_source": _string_or_empty(summary.get("patch_source")),
+        "winner": _string_or_empty(summary.get("winner")),
+        "winner_team_index": _string_or_empty(summary.get("winner_team_index")),
+        "team_1_average_badge": _string_or_empty(summary.get("team_1_average_badge")),
+        "team_2_average_badge": _string_or_empty(summary.get("team_2_average_badge")),
+        **team_1_heroes,
+        **team_2_heroes,
+        **team_1_accounts,
+        **team_2_accounts,
+        **team_1_pp_scores,
+        **team_2_pp_scores,
+    }
 
 
 def _format_team_block(
@@ -221,7 +278,7 @@ def _format_team_block(
             {
                 "Player": player.player_name,
                 "Hero": player.hero_name,
-                "Rank": player.rank,
+                "PPScore": player.pp_score,
                 "Account": player.account_id,
             }
         )
@@ -234,7 +291,7 @@ def _format_table(title: str, rows: list[dict[str, str]]) -> str:
     if not rows:
         return f"{title}\n(no players found)"
 
-    columns = ["Player", "Hero", "Rank", "Account"]
+    columns = ["Player", "Hero", "PPScore", "Account"]
     widths = {
         column: max(len(column), *(len(str(row[column])) for row in rows))
         for column in columns
@@ -253,6 +310,67 @@ def _hero_columns(players: list[PlayerView], prefix: str) -> dict[str, str]:
     hero_ids = [player.hero_id for player in players[:6]]
     padded = hero_ids + [""] * (6 - len(hero_ids))
     return {f"{prefix}_hero_{index}": hero_id for index, hero_id in enumerate(padded, start=1)}
+
+
+def _account_columns(players: list[PlayerView], prefix: str) -> dict[str, str]:
+    account_ids = [player.account_id for player in players[:6]]
+    padded = account_ids + [""] * (6 - len(account_ids))
+    return {f"{prefix}_account_{index}": value for index, value in enumerate(padded, start=1)}
+
+
+def _pp_score_columns(players: list[PlayerView], prefix: str) -> dict[str, str]:
+    pp_scores = [player.pp_score for player in players[:6]]
+    padded = pp_scores + ["Unknown"] * (6 - len(pp_scores))
+    return {f"{prefix}_pp_score_{index}": value for index, value in enumerate(padded, start=1)}
+
+
+def _player_value_columns(
+    players: Any,
+    *,
+    prefix: str,
+    key: str,
+    fallback: str,
+    fallback_keys: tuple[str, ...] = (),
+) -> dict[str, str]:
+    values: list[str] = []
+    if isinstance(players, list):
+        for player in players[:6]:
+            if isinstance(player, dict):
+                raw_value = player.get(key)
+                if raw_value is None:
+                    for fallback_key in fallback_keys:
+                        raw_value = player.get(fallback_key)
+                        if raw_value is not None:
+                            break
+                if raw_value is None:
+                    raw_value = fallback
+            else:
+                raw_value = fallback
+            values.append(_string_or_empty(raw_value) if fallback == "" else _string_or(raw_value, fallback))
+
+    padded = values + [fallback] * (6 - len(values))
+    if key == "hero_id":
+        suffix = "hero"
+    elif key == "account_id":
+        suffix = "account"
+    elif key == "pp_score":
+        suffix = "pp_score"
+    else:
+        suffix = key
+    return {f"{prefix}_{suffix}_{index}": value for index, value in enumerate(padded, start=1)}
+
+
+def _string_or(value: Any, fallback: str) -> str:
+    if value is None:
+        return fallback
+    text = str(value)
+    return text if text else fallback
+
+
+def _string_or_empty(value: Any) -> str:
+    if value is None:
+        return ""
+    return str(value)
 
 
 def _sorted_players(players: list[PlayerView]) -> list[PlayerView]:
@@ -400,9 +518,11 @@ def _extract_hero_id(player: dict[str, Any]) -> int | str | None:
     return None
 
 
-def _extract_rank(player: dict[str, Any]) -> str:
+def _extract_pp_score(player: dict[str, Any]) -> str:
     value = _pick_first(
         player,
+        "pp_score",
+        "ppScore",
         "rank_name",
         "rank",
         "rank_tier",
