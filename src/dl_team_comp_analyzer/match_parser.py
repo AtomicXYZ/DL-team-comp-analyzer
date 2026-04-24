@@ -460,6 +460,8 @@ def _humanize_team_label(team_key: str, fallback: str) -> str:
     known = {
         "team_1": "Team 1",
         "team_2": "Team 2",
+        "team0": "Team 1",
+        "team1": "Team 2",
         "hidden_king": "Hidden King",
         "archmother": "Archmother",
         "archon": "Archon",
@@ -476,9 +478,23 @@ def _format_winner(winner: Any, team_1_key: str, team_2_key: str) -> str:
 
     if isinstance(winner, str):
         normalized = winner.strip().lower().replace(" ", "_")
-        if normalized in {team_1_key, "team_1", "0"}:
+        team_1_aliases = {
+            team_1_key,
+            team_1_key.replace("_", ""),
+            "team_1",
+            "team1" if team_1_key == "team_2" else "team0",
+            "0",
+        }
+        team_2_aliases = {
+            team_2_key,
+            team_2_key.replace("_", ""),
+            "team_2",
+            "team1",
+            "1",
+        }
+        if normalized in team_1_aliases:
             return _humanize_team_label(team_1_key, "Team 1")
-        if normalized in {team_2_key, "team_2", "1"}:
+        if normalized in team_2_aliases:
             return _humanize_team_label(team_2_key, "Team 2")
         return winner
 
@@ -516,6 +532,8 @@ def _extract_average_badge(payload: dict[str, Any], team_key: str) -> str:
     badge_key_map = {
         "team_1": "average_badge_team0",
         "team_2": "average_badge_team1",
+        "team0": "average_badge_team0",
+        "team1": "average_badge_team1",
     }
     badge_key = badge_key_map.get(team_key)
     if badge_key is None:
