@@ -1,0 +1,144 @@
+{
+  "match_id": "77186346",
+  "start_time_s": 1776716969,
+  "start_time_utc": "2026-04-20 20:29:29 UTC",
+  "patch": "2026-04-10",
+  "patch_source": "inferred from start_time (official gameplay update date)",
+  "winner": "Team 2",
+  "team_1_label": "Team 1",
+  "team_1_average_badge": "91",
+  "team_1_hero_ids": [
+    "66",
+    "50",
+    "76",
+    "4",
+    "12",
+    "3"
+  ],
+  "team_1_hero_names": [
+    "Victor",
+    "Pocket",
+    "Graves",
+    "Lady Geist",
+    "Kelvin",
+    "Vindicta"
+  ],
+  "team_1_players": [
+    {
+      "player_name": "Player 17964440",
+      "account_id": "17964440",
+      "hero_id": "66",
+      "hero_name": "Victor",
+      "rank": "Unknown",
+      "team_key": "team_1"
+    },
+    {
+      "player_name": "Player 9261994",
+      "account_id": "9261994",
+      "hero_id": "50",
+      "hero_name": "Pocket",
+      "rank": "Unknown",
+      "team_key": "team_1"
+    },
+    {
+      "player_name": "Player 1251680070",
+      "account_id": "1251680070",
+      "hero_id": "76",
+      "hero_name": "Graves",
+      "rank": "Unknown",
+      "team_key": "team_1"
+    },
+    {
+      "player_name": "Player 89783820",
+      "account_id": "89783820",
+      "hero_id": "4",
+      "hero_name": "Lady Geist",
+      "rank": "Unknown",
+      "team_key": "team_1"
+    },
+    {
+      "player_name": "Player 82060053",
+      "account_id": "82060053",
+      "hero_id": "12",
+      "hero_name": "Kelvin",
+      "rank": "Unknown",
+      "team_key": "team_1"
+    },
+    {
+      "player_name": "Player 876045882",
+      "account_id": "876045882",
+      "hero_id": "3",
+      "hero_name": "Vindicta",
+      "rank": "Unknown",
+      "team_key": "team_1"
+    }
+  ],
+  "team_2_label": "Team 2",
+  "team_2_average_badge": "91",
+  "team_2_hero_ids": [
+    "6",
+    "10",
+    "65",
+    "31",
+    "69",
+    "1"
+  ],
+  "team_2_hero_names": [
+    "Abrams",
+    "Paradox",
+    "Venator",
+    "Lash",
+    "The Doorman",
+    "Infernus"
+  ],
+  "team_2_players": [
+    {
+      "player_name": "Player 1008300861",
+      "account_id": "1008300861",
+      "hero_id": "6",
+      "hero_name": "Abrams",
+      "rank": "Unknown",
+      "team_key": "team_2"
+    },
+    {
+      "player_name": "Player 233256651",
+      "account_id": "233256651",
+      "hero_id": "10",
+      "hero_name": "Paradox",
+      "rank": "Unknown",
+      "team_key": "team_2"
+    },
+    {
+      "player_name": "Player 1116340533",
+      "account_id": "1116340533",
+      "hero_id": "65",
+      "hero_name": "Venator",
+      "rank": "Unknown",
+      "team_key": "team_2"
+    },
+    {
+      "player_name": "Player 1051104072",
+      "account_id": "1051104072",
+      "hero_id": "31",
+      "hero_name": "Lash",
+      "rank": "Unknown",
+      "team_key": "team_2"
+    },
+    {
+      "player_name": "Player 57567850",
+      "account_id": "57567850",
+      "hero_id": "69",
+      "hero_name": "The Doorman",
+      "rank": "Unknown",
+      "team_key": "team_2"
+    },
+    {
+      "player_name": "Player 289283600",
+      "account_id": "289283600",
+      "hero_id": "1",
+      "hero_name": "Infernus",
+      "rank": "Unknown",
+      "team_key": "team_2"
+    }
+  ]
+}
