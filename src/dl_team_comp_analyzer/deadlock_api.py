@@ -31,25 +31,19 @@ class DeadlockApiClient:
     def fetch_match_metadata(self, match_id: int | str) -> dict[str, Any]:
         return self._get_json(f"{self.game_api_base}/matches/{match_id}/metadata")
 
-    def fetch_bulk_match_metadata(self, **query_params: Any) -> dict[str, Any]:
+    def fetch_bulk_match_metadata(self, **query_params: Any) -> Any:
         query = _encode_query_params(query_params)
         url = f"{self.game_api_base}/matches/metadata"
         if query:
             url = f"{url}?{query}"
-        payload = self._get_json(url)
-        if not isinstance(payload, dict):
-            raise DeadlockApiError("Bulk metadata endpoint did not return a JSON object")
-        return payload
+        return self._get_json(url)
 
-    def fetch_player_match_history(self, account_id: int | str, **query_params: Any) -> dict[str, Any]:
+    def fetch_player_match_history(self, account_id: int | str, **query_params: Any) -> Any:
         query = _encode_query_params(query_params)
         url = f"{self.game_api_base}/players/{account_id}/match-history"
         if query:
             url = f"{url}?{query}"
-        payload = self._get_json(url)
-        if not isinstance(payload, dict):
-            raise DeadlockApiError("Player match history endpoint did not return a JSON object")
-        return payload
+        return self._get_json(url)
 
     def save_json(self, payload: Any, output_path: str | Path) -> Path:
         output = Path(output_path)
