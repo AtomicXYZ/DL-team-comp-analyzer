@@ -15,7 +15,11 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from dl_team_comp_analyzer.bulk_extract import extract_match_payloads
-from dl_team_comp_analyzer.deadlock_api import DeadlockApiClient, DeadlockApiError
+from dl_team_comp_analyzer.deadlock_api import (
+    DeadlockApiClient,
+    DeadlockApiError,
+    DeadlockRateLimitError,
+)
 from dl_team_comp_analyzer.match_parser import (
     build_match_view,
     dataset_fieldnames,
@@ -31,6 +35,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-count", type=int, default=10000)
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument("--sleep-seconds", type=float, default=0.35)
+    parser.add_argument("--rate-limit-sleep-seconds", type=float, default=7.0)
     parser.add_argument("--max-batches", type=int)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--jsonl-output", default="data/processed/match_summaries.jsonl")
@@ -115,6 +120,14 @@ def run_exact_match_id_mode(
                 include_objectives=False,
                 include_mid_boss=False,
             )
+        except DeadlockRateLimitError as exc:
+            wait_seconds = exc.retry_after_seconds or args.rate_limit_sleep_seconds
+            print(
+                f"[batch {batch_index}] rate limited, sleeping {wait_seconds:.1f}s",
+                file=sys.stderr,
+            )
+            time.sleep(wait_seconds)
+            continue
         except DeadlockApiError as exc:
             print(f"[batch {batch_index}] failed: {exc}", file=sys.stderr)
             time.sleep(args.sleep_seconds)
@@ -170,6 +183,11 @@ def run_paged_mode(
 
         try:
             payload = client.fetch_bulk_match_metadata(**query_params)
+        except DeadlockRateLimitError as exc:
+            wait_seconds = exc.retry_after_seconds or args.rate_limit_sleep_seconds
+            print(f"Rate limited, sleeping {wait_seconds:.1f}s", file=sys.stderr)
+            time.sleep(wait_seconds)
+            continue
         except DeadlockApiError as exc:
             print(f"Error: {exc}", file=sys.stderr)
             return added

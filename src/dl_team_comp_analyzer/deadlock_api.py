@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
@@ -14,6 +15,21 @@ DEFAULT_ASSETS_API_BASE = "https://assets.deadlock-api.com/v2"
 
 class DeadlockApiError(RuntimeError):
     """Raised when the Deadlock API request fails."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        retry_after_seconds: float | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.retry_after_seconds = retry_after_seconds
+
+
+class DeadlockRateLimitError(DeadlockApiError):
+    """Raised when the Deadlock API rate limit is exceeded."""
 
 
 class DeadlockApiClient:
@@ -88,8 +104,24 @@ class DeadlockApiClient:
             with urlopen(request, timeout=self.timeout_seconds) as response:
                 body = response.read().decode("utf-8")
         except HTTPError as exc:
+            response_body = ""
+            try:
+                response_body = exc.read().decode("utf-8")
+            except Exception:
+                response_body = ""
+
+            retry_after_seconds = _extract_retry_after_seconds(exc, response_body)
+            if exc.code == 429:
+                raise DeadlockRateLimitError(
+                    f"Deadlock API rate limit hit for {url}",
+                    status_code=exc.code,
+                    retry_after_seconds=retry_after_seconds,
+                ) from exc
+
             raise DeadlockApiError(
-                f"Deadlock API returned HTTP {exc.code} for {url}"
+                f"Deadlock API returned HTTP {exc.code} for {url}",
+                status_code=exc.code,
+                retry_after_seconds=retry_after_seconds,
             ) from exc
         except URLError as exc:
             raise DeadlockApiError(f"Could not reach Deadlock API at {url}") from exc
@@ -121,3 +153,32 @@ def _encode_query_params(query_params: dict[str, Any]) -> str:
         cleaned.append((key, str(value)))
 
     return urlencode(cleaned)
+
+
+def _extract_retry_after_seconds(exc: HTTPError, response_body: str) -> float | None:
+    retry_after = exc.headers.get("Retry-After")
+    if retry_after:
+        try:
+            return float(retry_after)
+        except ValueError:
+            pass
+
+    try:
+        payload = json.loads(response_body) if response_body else {}
+    except json.JSONDecodeError:
+        payload = {}
+
+    if isinstance(payload, dict):
+        error = payload.get("error")
+        if isinstance(error, dict):
+            quota = error.get("quota")
+            if isinstance(quota, dict):
+                limit = quota.get("limit")
+                period = quota.get("period")
+                try:
+                    if limit and period:
+                        return float(math.ceil(float(period) / float(limit)) + 1)
+                except (TypeError, ValueError, ZeroDivisionError):
+                    pass
+
+    return None
