@@ -48,10 +48,16 @@ class StatlockerApiClient:
             )
 
     def fetch_profile(self, account_id: int | str) -> Any:
-        return self._get_json(f"{self.api_base}/profile/aggregate-stats/{account_id}")
+        return self._get_json(f"{self.api_base}/public/profile/{account_id}")
 
     def fetch_batch_profiles(self, account_ids: list[int | str]) -> Any:
-        return self._post_json(f"{self.api_base}/profile/batch-profiles", account_ids)
+        return self._post_json(f"{self.api_base}/public/profiles", account_ids)
+
+    def fetch_match(self, match_id: int | str) -> Any:
+        return self._get_json(f"{self.api_base}/public/match/{match_id}")
+
+    def fetch_batch_matches(self, match_ids: list[int | str]) -> Any:
+        return self._post_json(f"{self.api_base}/public/matches", match_ids)
 
     def _get_json(self, url: str) -> Any:
         request = Request(url, headers=self._headers(), method="GET")

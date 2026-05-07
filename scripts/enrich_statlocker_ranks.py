@@ -25,13 +25,13 @@ from dl_team_comp_analyzer.statlocker_api import (
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Merge Statlocker profile ranks into an existing match summary JSONL + CSV."
+        description="Merge Statlocker profile PP scores into an existing match summary JSONL + CSV."
     )
     parser.add_argument("--jsonl-path", default="data/processed/match_summaries.jsonl")
     parser.add_argument("--csv-path", default="data/processed/match_dataset.csv")
     parser.add_argument(
         "--rank-cache-path",
-        default="data/processed/statlocker_profile_ranks.json",
+        default="data/processed/statlocker_profile_pp_scores.json",
     )
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument("--sleep-seconds", type=float, default=0.1)
@@ -132,18 +132,18 @@ def load_rank_cache(path: Path) -> dict[str, str]:
     if not isinstance(payload, dict):
         return {}
     return {
-        str(account_id): normalize_rank_value(rank)
-        for account_id, rank in payload.items()
-        if normalize_rank_value(rank) != "Unknown"
+        str(account_id): pp_score
+        for account_id, value in payload.items()
+        if (pp_score := normalize_pp_score(value)) != "Unknown"
     }
 
 
 def write_rank_cache(path: Path, ranks: dict[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     serializable = {
-        account_id: rank
-        for account_id, rank in sorted(ranks.items())
-        if normalize_rank_value(rank) != "Unknown"
+        account_id: pp_score
+        for account_id, value in sorted(ranks.items())
+        if (pp_score := normalize_pp_score(value)) != "Unknown"
     }
     path.write_text(json.dumps(serializable, indent=2, sort_keys=True), encoding="utf-8")
 
@@ -166,12 +166,10 @@ def collect_existing_ranks(summaries: list[dict[str, Any]]) -> dict[str, str]:
     for summary in summaries:
         for player in iter_summary_players(summary):
             account_id = str(player.get("account_id", "")).strip()
-            rank = normalize_rank_value(player.get("pp_score"))
-            if rank == "Unknown":
-                rank = normalize_rank_value(player.get("rank"))
-            if not account_id or account_id.startswith("unknown-") or rank == "Unknown":
+            pp_score = normalize_pp_score(player.get("pp_score"))
+            if not account_id or account_id.startswith("unknown-") or pp_score == "Unknown":
                 continue
-            known_ranks[account_id] = rank
+            known_ranks[account_id] = pp_score
     return known_ranks
 
 
@@ -237,7 +235,7 @@ def extract_batch_profile_ranks(payload: Any) -> dict[str, str]:
         account_id = extract_account_id(candidate)
         if not account_id:
             continue
-        rank = extract_rank(candidate)
+        rank = extract_pp_score(candidate)
         if rank:
             ranks[account_id] = rank
     return ranks
@@ -271,44 +269,16 @@ def extract_account_id(candidate: dict[str, Any]) -> str | None:
     return None
 
 
-def extract_rank(candidate: dict[str, Any]) -> str | None:
-    direct = normalize_rank_value(
-        _pick_first(
-            candidate,
-            "ppScore",
-            "performanceRankMessage",
-            "rank",
-            "rank_name",
-            "display_rank",
-            "current_rank",
-            "badge_text",
-            "medal",
-            "estimatedRankNumber",
-            "averageMatchRankNumber",
-        )
-    )
+def extract_pp_score(candidate: dict[str, Any]) -> str | None:
+    direct = normalize_pp_score(_pick_first(candidate, "ppScore", "pp_score"))
     if direct != "Unknown":
         return direct
 
-    for nested_key in ("profile", "stats", "aggregate_stats", "rank_info", "mmr", "data"):
+    for nested_key in ("steamProfile", "profile", "stats", "aggregate_stats", "data"):
         nested = candidate.get(nested_key)
         if not isinstance(nested, dict):
             continue
-        nested_rank = normalize_rank_value(
-            _pick_first(
-                nested,
-                "ppScore",
-                "performanceRankMessage",
-                "rank",
-                "rank_name",
-                "display_rank",
-                "current_rank",
-                "badge_text",
-                "medal",
-                "estimatedRankNumber",
-                "averageMatchRankNumber",
-            )
-        )
+        nested_rank = normalize_pp_score(_pick_first(nested, "ppScore", "pp_score"))
         if nested_rank != "Unknown":
             return nested_rank
 
@@ -329,8 +299,6 @@ def apply_ranks_to_summaries(
             if not rank:
                 continue
             previous = player.get("pp_score")
-            if previous is None:
-                previous = player.get("rank")
             if previous != rank:
                 player["pp_score"] = rank
                 if "rank" in player:
@@ -381,6 +349,18 @@ def normalize_rank_value(value: Any) -> str:
     if text.lower() in {"unknown", "none", "null", "n/a"}:
         return "Unknown"
     return text
+
+
+def normalize_pp_score(value: Any) -> str:
+    if value is None:
+        return "Unknown"
+    try:
+        pp_score = int(float(str(value).strip()))
+    except (TypeError, ValueError):
+        return "Unknown"
+    if pp_score <= 0:
+        return "Unknown"
+    return str(pp_score)
 
 
 def chunked(values: list[str], size: int) -> list[list[str]]:

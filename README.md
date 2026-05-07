@@ -6,14 +6,14 @@ First prototype for a `Deadlock Team Comp Analyzer`.
 
 Show the most important fields from one match:
 
-- team 1 heroes and rank per player
-- team 2 heroes and rank per player
+- team 1 heroes and Statlocker PP score per player
+- team 2 heroes and Statlocker PP score per player
 - winner
 - patch
 
 This gives us a clean first step toward building the training dataset for the model.
 
-For the MVP, player rank may stay unavailable for some matches. In that case we still keep:
+For the MVP, player PP score may stay unavailable for some matches. In that case we still keep:
 
 - both team comps
 - winner
@@ -35,6 +35,59 @@ For the MVP, player rank may stay unavailable for some matches. In that case we 
   Normalizes raw match JSON into a simple structure we can reuse later for dataset creation.
 
 ## Usage
+
+## Clean V2 Pipeline
+
+The current recommended pipeline keeps Deadlock match data, Statlocker account PP scores, and the final training CSV as separate steps:
+
+```bash
+cd /root/DL-team-comp-analyzer
+```
+
+Fetch Deadlock match summaries:
+
+```bash
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_matches.py --target-count 10000 --batch-size 100 --resume
+```
+
+Extract unique account IDs from those matches:
+
+```bash
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/extract_accounts.py
+```
+
+Fetch Statlocker `ppScore` values for those accounts:
+
+```bash
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_pp_scores.py
+```
+
+Build the flat training CSV:
+
+```bash
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/build_dataset.py
+```
+
+Or run the whole v2 flow in order, useful inside `screen`:
+
+```bash
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/run_pipeline.py
+```
+
+V2 outputs live under `data/v2/`:
+
+- `matches.jsonl`: rich match summaries with players and account IDs
+- `accounts.txt`: unique account IDs found in the matches
+- `pp_scores.json`: `account_id -> ppScore`
+- `team_comp_dataset.csv`: flat training dataset
+
+You can also bootstrap v2 from an existing JSONL:
+
+```bash
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/extract_accounts.py --matches data/processed/match_summaries.jsonl --output data/v2/accounts.txt
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_pp_scores.py --accounts data/v2/accounts.txt --output data/v2/pp_scores.json
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/build_dataset.py --matches data/processed/match_summaries.jsonl --pp-scores data/v2/pp_scores.json --output data/v2/team_comp_dataset.csv
+```
 
 Fetch one match directly from the API:
 
@@ -79,7 +132,7 @@ python scripts/fetch_player_match_ids.py --account-id 17964440 --account-id 9261
 python scripts/fetch_bulk_summaries.py --match-ids-file data/processed/seed_match_ids.txt --batch-size 100
 ```
 
-Merge Statlocker profile ranks into the already collected dataset without re-fetching matches:
+Merge Statlocker profile PP scores into the already collected dataset without re-fetching matches:
 
 ```bash
 cp .env.example .env
@@ -87,9 +140,9 @@ cp .env.example .env
 /root/DL-team-comp-analyzer/.venv/bin/python scripts/enrich_statlocker_ranks.py --jsonl-only
 ```
 
-This script does not call the Statlocker match endpoints. It reads existing `account_id`s from
-`match_summaries.jsonl`, fetches unique profile ranks in batches of up to `100` accounts, stores a
-local cache in `data/processed/statlocker_profile_ranks.json`, and writes the rank back into each
+This script uses Statlocker's public profile batch endpoint, not the Statlocker match endpoints. It reads existing `account_id`s from
+`match_summaries.jsonl`, fetches unique profile `ppScore` values in batches of up to `100` accounts, stores a
+local cache in `data/processed/statlocker_profile_pp_scores.json`, and writes `pp_score` back into each
 player entry.
 
 ## Notes
