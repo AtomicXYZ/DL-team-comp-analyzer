@@ -40,9 +40,11 @@ def _looks_like_match(candidate: Any) -> bool:
         return True
     if {"match_id", "players"} <= set(candidate.keys()):
         return True
-    if "players" in candidate and isinstance(candidate["players"], list) and _pick_first(candidate, "winning_team", "winner") is not None:
-        return True
-    return False
+    return (
+        "players" in candidate
+        and isinstance(candidate["players"], list)
+        and _pick_first(candidate, "winning_team", "winner") is not None
+    )
 
 
 def _pick_first(payload: dict[str, Any], *keys: str) -> Any:
