@@ -1,189 +1,113 @@
 # DL-team-comp-analyzer
 
-First prototype for a `Deadlock Team Comp Analyzer`.
+Deep-learning prototype that predicts the winning side of a Deadlock match from both
+team compositions.
 
-## Current Goal
+## Current Project Flow
 
-Show the most important fields from one match:
+The project now has one clear v2 pipeline:
 
-- team 1 heroes and Statlocker PP score per player
-- team 2 heroes and Statlocker PP score per player
-- winner
-- patch
+```text
+Deadlock API normal matches
+  -> data/v2/new_patch_matches.jsonl
+  -> data/v2/new_patch_team_comp_dataset.csv
+  -> PyTorch neural network
+  -> models/v2/neural_teamcomp_heroes_only.pt
+```
 
-This gives us a clean first step toward building the training dataset for the model.
+## Main Commands
 
-For the MVP, player PP score may stay unavailable for some matches. In that case we still keep:
-
-- both team comps
-- winner
-- match start time
-- inferred patch
-- average badge per team
-
-## What Is Included
-
-- `scripts/show_match.py`
-  Fetches one match from the Deadlock API or reads a saved raw JSON file.
-- `scripts/fetch_bulk_summaries.py`
-  Efficiently downloads many lightweight match summaries and appends them to `JSONL + CSV`.
-- `scripts/fetch_player_match_ids.py`
-  Fallback helper that harvests match IDs from one or more player match-history endpoints.
-- `src/dl_team_comp_analyzer/deadlock_api.py`
-  Small Deadlock API client for match metadata and hero names.
-- `src/dl_team_comp_analyzer/match_parser.py`
-  Normalizes raw match JSON into a simple structure we can reuse later for dataset creation.
-
-## Usage
-
-## Clean V2 Pipeline
-
-The current recommended pipeline keeps Deadlock match data, Statlocker account PP scores, and the final training CSV as separate steps:
+Fetch 10k normal matches, newest first:
 
 ```bash
 cd /root/DL-team-comp-analyzer
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_matches.py \
+  --output data/v2/new_patch_matches.jsonl \
+  --state-file data/v2/new_patch_fetch_state.json \
+  --target-count 10000 \
+  --batch-size 100 \
+  --order-direction desc \
+  --sleep-seconds 6.2
 ```
 
-Fetch Deadlock match summaries:
+Build the training CSV:
 
 ```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_matches.py --target-count 10000 --batch-size 100 --resume
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/build_dataset.py \
+  --matches data/v2/new_patch_matches.jsonl \
+  --pp-scores data/v2/pp_scores.json \
+  --output data/v2/new_patch_team_comp_dataset.csv
 ```
 
-Extract unique account IDs from those matches:
+Train the neural network:
 
 ```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/extract_accounts.py
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/train_neural_teamcomp.py \
+  --dataset data/v2/new_patch_team_comp_dataset.csv \
+  --model-output models/v2/neural_teamcomp_heroes_only.pt \
+  --epochs 25
 ```
 
-Fetch Statlocker `ppScore` values for those accounts:
+## Neural Model
+
+The main model is in:
+
+- `scripts/v2/train_neural_teamcomp.py`
+- `models/v2/neural_teamcomp_heroes_only.pt`
+- `models/v2/neural_teamcomp_heroes_only.json`
+
+Input:
+
+- 6 hero IDs for team 1
+- 6 hero IDs for team 2
+
+Target:
+
+- `winner_team_index`
+- `0` means team 1 won
+- `1` means team 2 won
+
+Architecture:
+
+```text
+hero_id -> nn.Embedding
+team 1 embeddings -> team representation
+team 2 embeddings -> team representation
+team comparison features
+MLP -> probability that team 2 wins
+```
+
+By default the model does not use `average_badge`, Statlocker ranks, or ppScore. It
+learns from hero composition only. You can pass `--use-badge` for a comparison
+experiment, but the main model intentionally avoids that team-average rank summary.
+
+## Optional Statlocker ppScore Step
+
+These scripts are kept because individual player ppScore/rank can be added later:
 
 ```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_pp_scores.py
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/extract_accounts.py \
+  --matches data/v2/new_patch_matches.jsonl \
+  --output data/v2/accounts.txt
+
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_pp_scores.py \
+  --accounts data/v2/accounts.txt \
+  --output data/v2/pp_scores.json
 ```
 
-Build the flat training CSV:
+You need a `.env` file with:
 
-```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/build_dataset.py
+```text
+STATLOCKER_API_KEY=your_key_here
 ```
 
-Or run the whole v2 flow in order, useful inside `screen`:
+## Kept Scripts
 
-```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/run_pipeline.py
-```
+- `scripts/v2/fetch_matches.py`: fetch normal Deadlock match summaries.
+- `scripts/v2/build_dataset.py`: convert JSONL matches to training CSV.
+- `scripts/v2/train_neural_teamcomp.py`: train the PyTorch model.
+- `scripts/v2/extract_accounts.py`: optional account list for Statlocker.
+- `scripts/v2/fetch_pp_scores.py`: optional Statlocker ppScore fetch.
+- `scripts/v2/common.py`: shared file helpers and paths.
 
-V2 outputs live under `data/v2/`:
-
-- `matches.jsonl`: rich match summaries with players and account IDs
-- `accounts.txt`: unique account IDs found in the matches
-- `pp_scores.json`: `account_id -> ppScore`
-- `team_comp_dataset.csv`: flat training dataset
-
-You can also bootstrap v2 from an existing JSONL:
-
-```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/extract_accounts.py --matches data/processed/match_summaries.jsonl --output data/v2/accounts.txt
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_pp_scores.py --accounts data/v2/accounts.txt --output data/v2/pp_scores.json
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/build_dataset.py --matches data/processed/match_summaries.jsonl --pp-scores data/v2/pp_scores.json --output data/v2/team_comp_dataset.csv
-```
-
-Fetch one match directly from the API:
-
-```bash
-python scripts/show_match.py --match-id 123456789
-```
-
-Fetch one match and save the raw response for debugging:
-
-```bash
-python scripts/show_match.py --match-id 123456789 --save-raw data/raw/match_123456789.json
-```
-
-Fetch one match and also save a compact normalized summary:
-
-```bash
-python scripts/show_match.py --match-id 123456789 --save-raw data/raw/match_123456789.json --save-summary data/processed/match_123456789.summary.json
-```
-
-Read a previously saved raw response:
-
-```bash
-python scripts/show_match.py --json data/raw/match_123456789.json
-```
-
-Print the normalized output as JSON:
-
-```bash
-python scripts/show_match.py --match-id 123456789 --as-json
-```
-
-Fetch many lightweight summaries directly from the bulk endpoint:
-
-```bash
-python scripts/fetch_bulk_summaries.py --target-count 10000 --batch-size 100 --resume
-```
-
-Fetch match IDs from seed players first, then resolve those exact match IDs:
-
-```bash
-python scripts/fetch_player_match_ids.py --account-id 17964440 --account-id 9261994 --output data/processed/seed_match_ids.txt
-python scripts/fetch_bulk_summaries.py --match-ids-file data/processed/seed_match_ids.txt --batch-size 100
-```
-
-Merge Statlocker profile PP scores into the already collected dataset without re-fetching matches:
-
-```bash
-cp .env.example .env
-# put your real Statlocker key in .env as STATLOCKER_API_KEY=...
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/enrich_statlocker_ranks.py --jsonl-only
-```
-
-This script uses Statlocker's public profile batch endpoint, not the Statlocker match endpoints. It reads existing `account_id`s from
-`match_summaries.jsonl`, fetches unique profile `ppScore` values in batches of up to `100` accounts, stores a
-local cache in `data/processed/statlocker_profile_pp_scores.json`, and writes `pp_score` back into each
-player entry.
-
-## Notes
-
-- The Deadlock API endpoints used here are based on the public match metadata and assets APIs:
-  - `https://api.deadlock-api.com/v1/matches/{match_id}/metadata`
-  - `https://assets.deadlock-api.com/v2/heroes/{hero_id}`
-- The parser is intentionally defensive because public docs confirm the endpoints, but the exact match response shape can vary over time.
-- If a field is missing, the script falls back to `Unknown` instead of crashing immediately.
-- If the patch is not present in the API response, it is inferred from `start_time` using a local patch release table.
-- For large-scale collection, prefer the bulk metadata endpoint with player stats/items/death details disabled.
-
-## Recommended Collection Strategy
-
-If you want `10,000+` matches on a VM, use this order:
-
-1. Start with `scripts/fetch_bulk_summaries.py`
-   This is the most bandwidth-efficient route because it requests only match info + player info.
-2. Use `--resume`
-   The script stores a cursor in `data/processed/fetch_state.json` so it can keep running across restarts.
-3. Keep the batch size moderate
-   `100` is a good starting point.
-4. Keep a small delay between bulk calls
-   `0.35s` is a safe default and matches the published bulk endpoint limits much better than hammering it.
-5. Use `scripts/fetch_player_match_ids.py` only as a fallback
-   This is useful if you want to target matches around specific players or if the bulk endpoint does not give you the slice you want.
-
-Notes:
-
-- Your `20 GB VRAM` is not important for data collection. For this step, network stability, disk space, and resumable scripts matter much more.
-- Avoid storing raw match JSON for all games. A single raw match can be several megabytes, so `10,000` raw matches would become unreasonably large.
-- The dataset CSV is the main artifact you will train on; the JSONL file is there for debugging and future feature engineering.
-
-## Next Step
-
-Once this works for a few thousand matches, the next step is to train a first baseline model on columns like:
-
-- `match_id`
-- `patch`
-- `team_1_hero_1` ... `team_1_hero_6`
-- `team_2_hero_1` ... `team_2_hero_6`
-- `team_1_average_badge`
-- `team_2_average_badge`
-- `winner`
+Old v1/debug scripts were removed to keep the project focused.

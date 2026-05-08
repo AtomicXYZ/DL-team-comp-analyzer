@@ -13,6 +13,11 @@ class PatchRelease:
 
 PATCH_RELEASES: tuple[PatchRelease, ...] = (
     PatchRelease(
+        patch_name="2026-04-30",
+        effective_from_utc=datetime(2026, 4, 30, tzinfo=UTC),
+        source="official gameplay update date",
+    ),
+    PatchRelease(
         patch_name="2026-04-10",
         effective_from_utc=datetime(2026, 4, 10, tzinfo=UTC),
         source="official gameplay update date",

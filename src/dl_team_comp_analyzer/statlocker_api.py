@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -35,7 +36,7 @@ class StatlockerApiClient:
     def __init__(
         self,
         api_base: str = DEFAULT_STATLOCKER_API_BASE,
-        timeout_seconds: int = 20,
+        timeout_seconds: int = 45,
         api_key: str | None = None,
     ) -> None:
         load_repo_env()
@@ -52,12 +53,6 @@ class StatlockerApiClient:
 
     def fetch_batch_profiles(self, account_ids: list[int | str]) -> Any:
         return self._post_json(f"{self.api_base}/public/profiles", account_ids)
-
-    def fetch_match(self, match_id: int | str) -> Any:
-        return self._get_json(f"{self.api_base}/public/match/{match_id}")
-
-    def fetch_batch_matches(self, match_ids: list[int | str]) -> Any:
-        return self._post_json(f"{self.api_base}/public/matches", match_ids)
 
     def _get_json(self, url: str) -> Any:
         request = Request(url, headers=self._headers(), method="GET")
@@ -105,6 +100,10 @@ class StatlockerApiClient:
         except URLError as exc:
             raise StatlockerApiError(
                 f"Could not reach Statlocker API at {request.full_url}"
+            ) from exc
+        except (TimeoutError, socket.timeout) as exc:
+            raise StatlockerApiError(
+                f"Statlocker API request timed out for {request.full_url}"
             ) from exc
 
         try:

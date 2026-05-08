@@ -454,6 +454,23 @@ def _extract_start_time(payload: dict[str, Any]) -> int | None:
     value = _pick_first(payload, "start_time", "start_time_s", "match_start_time")
     if value is None:
         return None
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        try:
+            return int(stripped)
+        except ValueError:
+            pass
+        for date_format in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+            try:
+                return int(datetime.strptime(stripped, date_format).replace(tzinfo=UTC).timestamp())
+            except ValueError:
+                continue
+        try:
+            return int(datetime.fromisoformat(stripped.replace("Z", "+00:00")).timestamp())
+        except ValueError:
+            return None
     try:
         return int(value)
     except (TypeError, ValueError):

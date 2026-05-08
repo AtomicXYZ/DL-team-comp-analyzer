@@ -33,44 +33,6 @@ def extract_match_payloads(payload: Any) -> list[dict[str, Any]]:
     return []
 
 
-def extract_match_ids_from_history_payload(payload: Any) -> list[int]:
-    entries = _extract_history_entries(payload)
-    match_ids: list[int] = []
-    for entry in entries:
-        match_id = _pick_first(entry, "match_id", "matchId", "id")
-        if match_id is None:
-            continue
-        try:
-            match_ids.append(int(match_id))
-        except (TypeError, ValueError):
-            continue
-    return match_ids
-
-
-def _extract_history_entries(payload: Any) -> list[dict[str, Any]]:
-    if isinstance(payload, list):
-        if payload and all(isinstance(item, dict) for item in payload):
-            return payload
-        entries: list[dict[str, Any]] = []
-        for item in payload:
-            entries.extend(_extract_history_entries(item))
-        return entries
-
-    if isinstance(payload, dict):
-        for key in ("matches", "history", "entries", "data", "results"):
-            candidate = payload.get(key)
-            if isinstance(candidate, list) and candidate and all(isinstance(item, dict) for item in candidate):
-                if any(_pick_first(item, "match_id", "matchId", "id") is not None for item in candidate):
-                    return candidate
-
-        entries: list[dict[str, Any]] = []
-        for value in payload.values():
-            entries.extend(_extract_history_entries(value))
-        return entries
-
-    return []
-
-
 def _looks_like_match(candidate: Any) -> bool:
     if not isinstance(candidate, dict):
         return False

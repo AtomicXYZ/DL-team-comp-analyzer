@@ -29,6 +29,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--min-match-id", type=int)
     parser.add_argument("--max-match-id", type=int)
     parser.add_argument("--order-direction", choices=("asc", "desc"), default="desc")
+    parser.add_argument(
+        "--game-mode",
+        choices=("normal", "street_brawl", "explore_n_y_c", "internal"),
+        default="normal",
+        help="Deadlock API game_mode filter. Defaults to normal to exclude Street Brawl.",
+    )
+    parser.add_argument(
+        "--allow-missing-start-time",
+        action="store_true",
+        help="Keep matches without start_time_s. By default these are skipped.",
+    )
     return parser.parse_args()
 
 
@@ -60,6 +71,7 @@ def main() -> int:
             "include_player_death_details": False,
             "include_objectives": False,
             "include_mid_boss": False,
+            "game_mode": args.game_mode,
         }
 
         try:
@@ -78,7 +90,11 @@ def main() -> int:
             print("No matches returned, stopping.")
             break
 
-        summaries = normalize_matches(raw_matches, existing_match_ids)
+        summaries = normalize_matches(
+            raw_matches,
+            existing_match_ids,
+            allow_missing_start_time=args.allow_missing_start_time,
+        )
         append_jsonl(args.output, summaries)
         added += len(summaries)
         batch_index += 1
@@ -108,7 +124,12 @@ def main() -> int:
     return 0
 
 
-def normalize_matches(raw_matches: list[dict[str, Any]], existing_match_ids: set[str]) -> list[dict[str, Any]]:
+def normalize_matches(
+    raw_matches: list[dict[str, Any]],
+    existing_match_ids: set[str],
+    *,
+    allow_missing_start_time: bool,
+) -> list[dict[str, Any]]:
     summaries: list[dict[str, Any]] = []
     for raw_match in raw_matches:
         try:
@@ -116,6 +137,8 @@ def normalize_matches(raw_matches: list[dict[str, Any]], existing_match_ids: set
         except ValueError:
             continue
         if match_view.match_id in existing_match_ids:
+            continue
+        if not allow_missing_start_time and match_view.start_time_s is None:
             continue
         summaries.append(match_view_to_dict(match_view))
         existing_match_ids.add(match_view.match_id)
