@@ -3,11 +3,11 @@
     "architecture": "pool",
     "dropout": 0.3,
     "embedding_dim": 16,
-    "extra_feature_dim": 0,
+    "extra_feature_dim": 5,
     "hidden_dim": 128,
     "num_heroes": 38,
     "use_badge": false,
-    "use_pp_score": false
+    "use_pp_score": true
   },
   "hero_to_index": {
     "1": 0,
@@ -51,15 +51,15 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.563,
-      "avg_predicted_team2_win_probability": 0.5222361602783203,
-      "log_loss": 0.6788505935668945,
+      "accuracy": 0.559,
+      "avg_predicted_team2_win_probability": 0.4986821022033691,
+      "log_loss": 0.6791425399780273,
       "positive_rate": 0.5165
     },
     "train": {
-      "accuracy": 0.5885,
-      "avg_predicted_team2_win_probability": 0.5245022430419922,
-      "log_loss": 0.6687127108573914,
+      "accuracy": 0.6005,
+      "avg_predicted_team2_win_probability": 0.5026644413471222,
+      "log_loss": 0.6625022168159485,
       "positive_rate": 0.5
     }
   },
@@ -78,13 +78,13 @@
     "epochs": 45,
     "hidden_dim": 128,
     "learning_rate": 0.0007,
-    "model_output": "models/v2/experiments/medium_pool.pt",
+    "model_output": "models/v2/experiments/medium_ppscore_reference.pt",
     "no_swap_augmentation": false,
     "seed": 42,
     "split": "time",
     "test_fraction": 0.2,
     "use_badge": false,
-    "use_pp_score": false,
+    "use_pp_score": true,
     "weight_decay": 0.0007
   }
 }

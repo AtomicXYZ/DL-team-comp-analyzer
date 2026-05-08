@@ -1,0 +1,14 @@
+name,embedding_dim,hidden_dim,architecture,dropout,batch_size,epochs,extra_flags,train_accuracy,train_log_loss,test_accuracy,test_log_loss,model_path
+tiny_heroes_only,8,64,mean,0.10,256,20,,0.5979,0.6635,0.5545,0.6819,models/v2/experiments/tiny_heroes_only.pt
+medium_heroes_only,16,128,mean,0.15,256,25,,0.5946,0.6662,0.5550,0.6797,models/v2/experiments/medium_heroes_only.pt
+large_heroes_only,32,256,mean,0.25,256,35,,0.6147,0.6546,0.5525,0.6796,models/v2/experiments/large_heroes_only.pt
+medium_long_regularized,16,128,mean,0.35,256,60,,0.6029,0.6611,0.5550,0.6791,models/v2/experiments/medium_long_regularized.pt
+large_strong_regularized,32,256,mean,0.45,256,60,,0.6080,0.6575,0.5555,0.6805,models/v2/experiments/large_strong_regularized.pt
+medium_no_swap,16,128,mean,0.20,256,35,--no-swap-augmentation,0.6150,0.6531,0.5560,0.6805,models/v2/experiments/medium_no_swap.pt
+medium_random_split,16,128,mean,0.20,256,35,--split random,0.5899,0.6697,0.5680,0.6780,models/v2/experiments/medium_random_split.pt
+medium_with_badge_reference,16,128,mean,0.20,256,35,--use-badge,0.5953,0.6669,0.5615,0.6801,models/v2/experiments/medium_with_badge_reference.pt
+medium_pool,16,128,pool,0.30,256,45,,0.5885,0.6687,0.5630,0.6789,models/v2/experiments/medium_pool.pt
+medium_matchup,16,128,matchup,0.35,256,45,,0.5957,0.6661,0.5515,0.6791,models/v2/experiments/medium_matchup.pt
+large_matchup,24,192,matchup,0.40,256,55,,0.6061,0.6606,0.5600,0.6797,models/v2/experiments/large_matchup.pt
+medium_ppscore_reference,16,128,pool,0.30,256,45,--use-pp-score,0.6005,0.6625,0.5590,0.6791,models/v2/experiments/medium_ppscore_reference.pt
+medium_badge_ppscore_reference,16,128,pool,0.30,256,45,--use-badge --use-pp-score,0.6027,0.6638,0.5600,0.6781,models/v2/experiments/medium_badge_ppscore_reference.pt

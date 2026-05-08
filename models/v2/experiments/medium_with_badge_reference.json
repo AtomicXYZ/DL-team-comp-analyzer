@@ -1,12 +1,12 @@
 {
   "config": {
-    "architecture": "pool",
-    "dropout": 0.3,
+    "architecture": "mean",
+    "dropout": 0.2,
     "embedding_dim": 16,
-    "extra_feature_dim": 0,
+    "extra_feature_dim": 1,
     "hidden_dim": 128,
     "num_heroes": 38,
-    "use_badge": false,
+    "use_badge": true,
     "use_pp_score": false
   },
   "hero_to_index": {
@@ -51,15 +51,15 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.563,
-      "avg_predicted_team2_win_probability": 0.5222361602783203,
-      "log_loss": 0.6788505935668945,
+      "accuracy": 0.5615,
+      "avg_predicted_team2_win_probability": 0.49570259094238284,
+      "log_loss": 0.6801487808227539,
       "positive_rate": 0.5165
     },
     "train": {
-      "accuracy": 0.5885,
-      "avg_predicted_team2_win_probability": 0.5245022430419922,
-      "log_loss": 0.6687127108573914,
+      "accuracy": 0.5953125,
+      "avg_predicted_team2_win_probability": 0.497629225730896,
+      "log_loss": 0.666902928352356,
       "positive_rate": 0.5
     }
   },
@@ -70,21 +70,21 @@
     "train_samples_after_augmentation": 16000
   },
   "training_args": {
-    "architecture": "pool",
+    "architecture": "mean",
     "batch_size": 256,
     "dataset": "data/v2/new_patch_team_comp_dataset.csv",
-    "dropout": 0.3,
+    "dropout": 0.2,
     "embedding_dim": 16,
-    "epochs": 45,
+    "epochs": 35,
     "hidden_dim": 128,
-    "learning_rate": 0.0007,
-    "model_output": "models/v2/experiments/medium_pool.pt",
+    "learning_rate": 0.001,
+    "model_output": "models/v2/experiments/medium_with_badge_reference.pt",
     "no_swap_augmentation": false,
     "seed": 42,
     "split": "time",
     "test_fraction": 0.2,
-    "use_badge": false,
+    "use_badge": true,
     "use_pp_score": false,
-    "weight_decay": 0.0007
+    "weight_decay": 0.0002
   }
 }

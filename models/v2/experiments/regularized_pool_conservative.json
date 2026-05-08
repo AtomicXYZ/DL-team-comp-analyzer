@@ -1,10 +1,11 @@
 {
+  "best_epoch": 14,
   "config": {
     "architecture": "pool",
-    "dropout": 0.3,
+    "dropout": 0.45,
     "embedding_dim": 16,
     "extra_feature_dim": 0,
-    "hidden_dim": 128,
+    "hidden_dim": 96,
     "num_heroes": 38,
     "use_badge": false,
     "use_pp_score": false
@@ -51,40 +52,52 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.563,
-      "avg_predicted_team2_win_probability": 0.5222361602783203,
-      "log_loss": 0.6788505935668945,
+      "accuracy": 0.5595,
+      "avg_predicted_team2_win_probability": 0.48697198486328125,
+      "log_loss": 0.6807206115722656,
       "positive_rate": 0.5165
     },
     "train": {
-      "accuracy": 0.5885,
-      "avg_predicted_team2_win_probability": 0.5245022430419922,
-      "log_loss": 0.6687127108573914,
+      "accuracy": 0.5947794117647058,
+      "avg_predicted_team2_win_probability": 0.4892941587111529,
+      "log_loss": 0.6663098044956431,
       "positive_rate": 0.5
+    },
+    "validation": {
+      "accuracy": 0.5766666666666667,
+      "avg_predicted_team2_win_probability": 0.48422704060872396,
+      "log_loss": 0.678300609588623,
+      "positive_rate": 0.4791666666666667
     }
   },
   "rows": {
     "test": 2000,
     "total": 10000,
-    "train": 8000,
-    "train_samples_after_augmentation": 16000
+    "train": 6800,
+    "train_samples_after_augmentation": 13600,
+    "validation": 1200
   },
   "training_args": {
     "architecture": "pool",
     "batch_size": 256,
     "dataset": "data/v2/new_patch_team_comp_dataset.csv",
-    "dropout": 0.3,
+    "dropout": 0.45,
     "embedding_dim": 16,
-    "epochs": 45,
-    "hidden_dim": 128,
-    "learning_rate": 0.0007,
-    "model_output": "models/v2/experiments/medium_pool.pt",
+    "epochs": 80,
+    "grad_clip": 1.0,
+    "hidden_dim": 96,
+    "l1_lambda": 5e-07,
+    "learning_rate": 0.0005,
+    "min_delta": 0.0001,
+    "model_output": "models/v2/experiments/regularized_pool_conservative.pt",
     "no_swap_augmentation": false,
+    "patience": 6,
     "seed": 42,
     "split": "time",
     "test_fraction": 0.2,
     "use_badge": false,
     "use_pp_score": false,
-    "weight_decay": 0.0007
+    "validation_fraction": 0.15,
+    "weight_decay": 0.003
   }
 }

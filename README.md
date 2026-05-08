@@ -48,6 +48,14 @@ Train the neural network:
   --epochs 25
 ```
 
+Run the Streamlit demo:
+
+```bash
+/root/DL-team-comp-analyzer/.venv/bin/streamlit run app/streamlit_app.py \
+  --server.address 0.0.0.0 \
+  --server.port 8501
+```
+
 ## Neural Model
 
 The main model is in:
@@ -109,5 +117,6 @@ STATLOCKER_API_KEY=your_key_here
 - `scripts/v2/extract_accounts.py`: optional account list for Statlocker.
 - `scripts/v2/fetch_pp_scores.py`: optional Statlocker ppScore fetch.
 - `scripts/v2/common.py`: shared file helpers and paths.
+- `app/streamlit_app.py`: interactive lineup-vs-lineup demo.
 
 Old v1/debug scripts were removed to keep the project focused.
