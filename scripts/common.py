@@ -12,11 +12,12 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 DATA_DIR = REPO_ROOT / "data"
-MATCHES_PATH = DATA_DIR / "new_patch_matches.jsonl"
-ACCOUNTS_PATH = DATA_DIR / "accounts.txt"
+CURRENT_PATCH = "2026-05-22"
+MATCHES_PATH = DATA_DIR / f"matches_{CURRENT_PATCH}.jsonl"
+ACCOUNTS_PATH = DATA_DIR / f"accounts_{CURRENT_PATCH}.txt"
 PP_SCORES_PATH = DATA_DIR / "pp_scores.json"
-DATASET_PATH = DATA_DIR / "new_patch_team_comp_dataset.csv"
-FETCH_STATE_PATH = DATA_DIR / "new_patch_fetch_state.json"
+DATASET_PATH = DATA_DIR / f"team_comp_dataset_{CURRENT_PATCH}.csv"
+FETCH_STATE_PATH = DATA_DIR / f"fetch_state_{CURRENT_PATCH}.json"
 
 
 def ensure_parent(path: Path) -> None:

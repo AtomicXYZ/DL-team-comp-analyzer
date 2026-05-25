@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from common import FETCH_STATE_PATH, MATCHES_PATH, append_jsonl, load_json, read_jsonl, write_json
+from common import CURRENT_PATCH, FETCH_STATE_PATH, MATCHES_PATH, append_jsonl, load_json, read_jsonl, write_json
 
 from bulk_extract import extract_match_payloads
 from deadlock_api import (
@@ -17,18 +17,26 @@ from match_parser import build_match_view, match_view_to_dict
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Fetch Deadlock matches into data/new_patch_matches.jsonl.")
+    parser = argparse.ArgumentParser(description="Fetch normal Deadlock matches for one gameplay patch.")
     parser.add_argument("--output", type=Path, default=MATCHES_PATH)
     parser.add_argument("--state-file", type=Path, default=FETCH_STATE_PATH)
     parser.add_argument("--target-count", type=int, default=10000)
     parser.add_argument("--batch-size", type=int, default=100)
+    parser.add_argument("--timeout-seconds", type=int, default=45)
     parser.add_argument("--sleep-seconds", type=float, default=0.35)
     parser.add_argument("--rate-limit-sleep-seconds", type=float, default=10.0)
+    parser.add_argument("--request-error-sleep-seconds", type=float, default=10.0)
+    parser.add_argument("--max-consecutive-errors", type=int, default=5)
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--max-batches", type=int)
     parser.add_argument("--min-match-id", type=int)
     parser.add_argument("--max-match-id", type=int)
     parser.add_argument("--order-direction", choices=("asc", "desc"), default="desc")
+    parser.add_argument(
+        "--required-patch",
+        default=CURRENT_PATCH,
+        help=f"Only store matches classified as this patch. Defaults to {CURRENT_PATCH}.",
+    )
     parser.add_argument(
         "--game-mode",
         choices=("normal", "street_brawl", "explore_n_y_c", "internal"),
@@ -45,7 +53,7 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    client = DeadlockApiClient()
+    client = DeadlockApiClient(timeout_seconds=args.timeout_seconds)
     existing_match_ids = {str(match.get("match_id")) for match in read_jsonl(args.output)}
     state = load_json(args.state_file, {}) if args.resume else {}
 
@@ -53,8 +61,9 @@ def main() -> int:
     current_max_match_id = state.get("next_max_match_id", args.max_match_id)
     added = 0
     batch_index = 0
+    consecutive_errors = 0
 
-    while added < args.target_count:
+    while len(existing_match_ids) < args.target_count:
         if args.max_batches is not None and batch_index >= args.max_batches:
             break
 
@@ -82,18 +91,29 @@ def main() -> int:
             time.sleep(wait_seconds)
             continue
         except DeadlockApiError as exc:
-            print(f"Deadlock API failed: {exc}")
-            return 1
+            consecutive_errors += 1
+            if consecutive_errors >= args.max_consecutive_errors:
+                print(f"Deadlock API failed {consecutive_errors} times in a row: {exc}")
+                return 1
+            print(
+                f"Deadlock API request failed ({consecutive_errors}/{args.max_consecutive_errors}); "
+                f"retrying in {args.request_error_sleep_seconds:.1f}s: {exc}"
+            )
+            time.sleep(args.request_error_sleep_seconds)
+            continue
+
+        consecutive_errors = 0
 
         raw_matches = extract_match_payloads(payload)
         if not raw_matches:
             print("No matches returned, stopping.")
             break
 
-        summaries = normalize_matches(
+        summaries, skipped_other_patch = normalize_matches(
             raw_matches,
             existing_match_ids,
             allow_missing_start_time=args.allow_missing_start_time,
+            required_patch=args.required_patch,
         )
         append_jsonl(args.output, summaries)
         added += len(summaries)
@@ -116,9 +136,13 @@ def main() -> int:
                 "next_max_match_id": current_max_match_id,
                 "last_batch_size": len(raw_matches),
                 "total_added_this_run": added,
+                "total_matches": len(existing_match_ids),
             },
         )
-        print(f"[batch {batch_index}] fetched={len(raw_matches)} added={len(summaries)} total_added={added}")
+        print(
+            f"[batch {batch_index}] fetched={len(raw_matches)} added={len(summaries)} "
+            f"skipped_other_patch={skipped_other_patch} total_matches={len(existing_match_ids)}"
+        )
         time.sleep(args.sleep_seconds)
 
     return 0
@@ -129,8 +153,10 @@ def normalize_matches(
     existing_match_ids: set[str],
     *,
     allow_missing_start_time: bool,
-) -> list[dict[str, Any]]:
+    required_patch: str | None,
+) -> tuple[list[dict[str, Any]], int]:
     summaries: list[dict[str, Any]] = []
+    skipped_other_patch = 0
     for raw_match in raw_matches:
         try:
             match_view = build_match_view(raw_match)
@@ -140,9 +166,12 @@ def normalize_matches(
             continue
         if not allow_missing_start_time and match_view.start_time_s is None:
             continue
+        if required_patch and match_view.patch != required_patch:
+            skipped_other_patch += 1
+            continue
         summaries.append(match_view_to_dict(match_view))
         existing_match_ids.add(match_view.match_id)
-    return summaries
+    return summaries, skipped_other_patch
 
 
 def extract_match_id(raw_match: dict[str, Any]) -> int | None:

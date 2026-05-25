@@ -1,11 +1,11 @@
 {
-  "best_epoch": 9,
+  "best_epoch": 22,
   "config": {
-    "architecture": "pool",
-    "dropout": 0.3,
+    "architecture": "mean",
+    "dropout": 0.35,
     "embedding_dim": 16,
     "extra_feature_dim": 0,
-    "hidden_dim": 128,
+    "hidden_dim": 96,
     "num_heroes": 38,
     "use_badge": false,
     "use_pp_score": false
@@ -52,22 +52,22 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.5585,
-      "avg_predicted_team2_win_probability": 0.5063342018127441,
-      "log_loss": 0.6805468063354492,
-      "positive_rate": 0.5165
+      "accuracy": 0.5785,
+      "avg_predicted_team2_win_probability": 0.49487006759643554,
+      "log_loss": 0.6745573425292969,
+      "positive_rate": 0.494
     },
     "train": {
-      "accuracy": 0.5918382352941176,
-      "avg_predicted_team2_win_probability": 0.5085182177319246,
-      "log_loss": 0.6667307839674108,
+      "accuracy": 0.6276470588235294,
+      "avg_predicted_team2_win_probability": 0.4953518601024852,
+      "log_loss": 0.6448648693982293,
       "positive_rate": 0.5
     },
     "validation": {
-      "accuracy": 0.5741666666666667,
-      "avg_predicted_team2_win_probability": 0.502863744099935,
-      "log_loss": 0.6792954889933268,
-      "positive_rate": 0.4791666666666667
+      "accuracy": 0.5841666666666666,
+      "avg_predicted_team2_win_probability": 0.49136196772257484,
+      "log_loss": 0.6695859336853027,
+      "positive_rate": 0.4741666666666667
     }
   },
   "rows": {
@@ -78,18 +78,18 @@
     "validation": 1200
   },
   "training_args": {
-    "architecture": "pool",
+    "architecture": "mean",
     "batch_size": 256,
-    "dataset": "data/new_patch_team_comp_dataset.csv",
-    "dropout": 0.3,
+    "dataset": "data/team_comp_dataset_2026-05-22.csv",
+    "dropout": 0.35,
     "embedding_dim": 16,
     "epochs": 80,
     "grad_clip": 1.0,
-    "hidden_dim": 128,
-    "l1_lambda": 2e-07,
+    "hidden_dim": 96,
+    "l1_lambda": 5e-07,
     "learning_rate": 0.0005,
     "min_delta": 0.0001,
-    "model_output": "models/experiments/regularized_pool_medium.pt",
+    "model_output": "models/2026-05-22/experiments/mean_regularized.pt",
     "no_swap_augmentation": false,
     "patience": 8,
     "seed": 42,
@@ -98,6 +98,6 @@
     "use_badge": false,
     "use_pp_score": false,
     "validation_fraction": 0.15,
-    "weight_decay": 0.0015
+    "weight_decay": 0.002
   }
 }

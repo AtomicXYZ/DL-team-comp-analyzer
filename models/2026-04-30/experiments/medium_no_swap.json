@@ -1,13 +1,13 @@
 {
   "config": {
-    "architecture": "pool",
-    "dropout": 0.3,
+    "architecture": "mean",
+    "dropout": 0.2,
     "embedding_dim": 16,
-    "extra_feature_dim": 6,
+    "extra_feature_dim": 0,
     "hidden_dim": 128,
     "num_heroes": 38,
-    "use_badge": true,
-    "use_pp_score": true
+    "use_badge": false,
+    "use_pp_score": false
   },
   "hero_to_index": {
     "1": 0,
@@ -51,40 +51,40 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.56,
-      "avg_predicted_team2_win_probability": 0.5031877822875976,
-      "log_loss": 0.6780749969482421,
+      "accuracy": 0.556,
+      "avg_predicted_team2_win_probability": 0.49887829208374024,
+      "log_loss": 0.6805278625488281,
       "positive_rate": 0.5165
     },
     "train": {
-      "accuracy": 0.6026875,
-      "avg_predicted_team2_win_probability": 0.5063774447441101,
-      "log_loss": 0.6638054566383362,
-      "positive_rate": 0.5
+      "accuracy": 0.615,
+      "avg_predicted_team2_win_probability": 0.4969679117202759,
+      "log_loss": 0.6531248254776001,
+      "positive_rate": 0.4855
     }
   },
   "rows": {
     "test": 2000,
     "total": 10000,
     "train": 8000,
-    "train_samples_after_augmentation": 16000
+    "train_samples_after_augmentation": 8000
   },
   "training_args": {
-    "architecture": "pool",
+    "architecture": "mean",
     "batch_size": 256,
-    "dataset": "data/new_patch_team_comp_dataset.csv",
-    "dropout": 0.3,
+    "dataset": "data/team_comp_dataset_2026-04-30.csv",
+    "dropout": 0.2,
     "embedding_dim": 16,
-    "epochs": 45,
+    "epochs": 35,
     "hidden_dim": 128,
-    "learning_rate": 0.0007,
-    "model_output": "models/experiments/medium_badge_ppscore_reference.pt",
-    "no_swap_augmentation": false,
+    "learning_rate": 0.001,
+    "model_output": "models/2026-04-30/experiments/medium_no_swap.pt",
+    "no_swap_augmentation": true,
     "seed": 42,
     "split": "time",
     "test_fraction": 0.2,
-    "use_badge": true,
-    "use_pp_score": true,
-    "weight_decay": 0.0007
+    "use_badge": false,
+    "use_pp_score": false,
+    "weight_decay": 0.0002
   }
 }

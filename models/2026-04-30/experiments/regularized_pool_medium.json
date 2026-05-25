@@ -1,11 +1,11 @@
 {
-  "best_epoch": 15,
+  "best_epoch": 9,
   "config": {
-    "architecture": "matchup",
-    "dropout": 0.45,
-    "embedding_dim": 8,
+    "architecture": "pool",
+    "dropout": 0.3,
+    "embedding_dim": 16,
     "extra_feature_dim": 0,
-    "hidden_dim": 96,
+    "hidden_dim": 128,
     "num_heroes": 38,
     "use_badge": false,
     "use_pp_score": false
@@ -52,21 +52,21 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.5545,
-      "avg_predicted_team2_win_probability": 0.49488681411743163,
-      "log_loss": 0.6842553176879883,
+      "accuracy": 0.5585,
+      "avg_predicted_team2_win_probability": 0.5063342018127441,
+      "log_loss": 0.6805468063354492,
       "positive_rate": 0.5165
     },
     "train": {
-      "accuracy": 0.5692647058823529,
-      "avg_predicted_team2_win_probability": 0.4946755804735071,
-      "log_loss": 0.6771857986730688,
+      "accuracy": 0.5918382352941176,
+      "avg_predicted_team2_win_probability": 0.5085182177319246,
+      "log_loss": 0.6667307839674108,
       "positive_rate": 0.5
     },
     "validation": {
-      "accuracy": 0.55,
-      "avg_predicted_team2_win_probability": 0.49467373530069986,
-      "log_loss": 0.6858252652486165,
+      "accuracy": 0.5741666666666667,
+      "avg_predicted_team2_win_probability": 0.502863744099935,
+      "log_loss": 0.6792954889933268,
       "positive_rate": 0.4791666666666667
     }
   },
@@ -78,26 +78,26 @@
     "validation": 1200
   },
   "training_args": {
-    "architecture": "matchup",
+    "architecture": "pool",
     "batch_size": 256,
-    "dataset": "data/new_patch_team_comp_dataset.csv",
-    "dropout": 0.45,
-    "embedding_dim": 8,
+    "dataset": "data/team_comp_dataset_2026-04-30.csv",
+    "dropout": 0.3,
+    "embedding_dim": 16,
     "epochs": 80,
     "grad_clip": 1.0,
-    "hidden_dim": 96,
-    "l1_lambda": 5e-07,
-    "learning_rate": 0.0004,
+    "hidden_dim": 128,
+    "l1_lambda": 2e-07,
+    "learning_rate": 0.0005,
     "min_delta": 0.0001,
-    "model_output": "models/experiments/regularized_matchup_light.pt",
+    "model_output": "models/2026-04-30/experiments/regularized_pool_medium.pt",
     "no_swap_augmentation": false,
-    "patience": 6,
+    "patience": 8,
     "seed": 42,
     "split": "time",
     "test_fraction": 0.2,
     "use_badge": false,
     "use_pp_score": false,
     "validation_fraction": 0.15,
-    "weight_decay": 0.003
+    "weight_decay": 0.0015
   }
 }

@@ -1,0 +1,6 @@
+name,selected,architecture,embedding_dim,hidden_dim,dropout,best_epoch,validation_log_loss,test_accuracy,test_log_loss,features
+neural_teamcomp_heroes_only,true,pool,16,96,0.40,12,0.6700,0.5885,0.6741,heroes_only
+pool_medium_less_dropout,false,pool,16,128,0.35,15,0.6712,0.5885,0.6743,heroes_only
+pool_balanced,false,pool,16,96,0.30,12,0.6706,0.5845,0.6746,heroes_only
+mean_regularized,false,mean,16,96,0.35,22,0.6696,0.5785,0.6746,heroes_only
+matchup_regularized,false,matchup,16,96,0.40,19,0.6722,0.5810,0.6769,heroes_only

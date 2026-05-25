@@ -1,10 +1,10 @@
 {
   "config": {
     "architecture": "mean",
-    "dropout": 0.25,
-    "embedding_dim": 32,
+    "dropout": 0.1,
+    "embedding_dim": 8,
     "extra_feature_dim": 0,
-    "hidden_dim": 256,
+    "hidden_dim": 64,
     "num_heroes": 38,
     "use_badge": false,
     "use_pp_score": false
@@ -51,15 +51,15 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.5525,
-      "avg_predicted_team2_win_probability": 0.5075543251037598,
-      "log_loss": 0.6796344299316406,
+      "accuracy": 0.5545,
+      "avg_predicted_team2_win_probability": 0.5074555969238281,
+      "log_loss": 0.6818781204223633,
       "positive_rate": 0.5165
     },
     "train": {
-      "accuracy": 0.6146875,
-      "avg_predicted_team2_win_probability": 0.5087355523109436,
-      "log_loss": 0.654552535533905,
+      "accuracy": 0.597875,
+      "avg_predicted_team2_win_probability": 0.5093706755638122,
+      "log_loss": 0.6635074167251587,
       "positive_rate": 0.5
     }
   },
@@ -72,19 +72,19 @@
   "training_args": {
     "architecture": "mean",
     "batch_size": 256,
-    "dataset": "data/new_patch_team_comp_dataset.csv",
-    "dropout": 0.25,
-    "embedding_dim": 32,
-    "epochs": 35,
-    "hidden_dim": 256,
-    "learning_rate": 0.0007,
-    "model_output": "models/experiments/large_heroes_only.pt",
+    "dataset": "data/team_comp_dataset_2026-04-30.csv",
+    "dropout": 0.1,
+    "embedding_dim": 8,
+    "epochs": 20,
+    "hidden_dim": 64,
+    "learning_rate": 0.001,
+    "model_output": "models/2026-04-30/experiments/tiny_heroes_only.pt",
     "no_swap_augmentation": false,
     "seed": 42,
     "split": "time",
     "test_fraction": 0.2,
     "use_badge": false,
     "use_pp_score": false,
-    "weight_decay": 0.0002
+    "weight_decay": 0.0001
   }
 }

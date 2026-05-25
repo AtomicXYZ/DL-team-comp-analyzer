@@ -13,6 +13,11 @@ class PatchRelease:
 
 PATCH_RELEASES: tuple[PatchRelease, ...] = (
     PatchRelease(
+        patch_name="2026-05-22",
+        effective_from_utc=datetime(2026, 5, 22, 21, 52, 5, tzinfo=UTC),
+        source="official Gameplay Update - 05-22-2026 release time",
+    ),
+    PatchRelease(
         patch_name="2026-04-30",
         effective_from_utc=datetime(2026, 4, 30, tzinfo=UTC),
         source="official gameplay update date",
@@ -118,6 +123,8 @@ PATCH_RELEASES: tuple[PatchRelease, ...] = (
         source="official gameplay update date",
     ),
 )
+
+LATEST_PATCH_NAME = PATCH_RELEASES[0].patch_name
 
 
 def infer_patch_from_start_time(start_time_s: int | None) -> tuple[str, str]:

@@ -15,8 +15,8 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 
 
-DEFAULT_DATASET = Path("data/new_patch_team_comp_dataset.csv")
-DEFAULT_MODEL = Path("models/neural_teamcomp.pt")
+DEFAULT_DATASET = Path("data/team_comp_dataset_2026-05-22.csv")
+DEFAULT_MODEL = Path("models/2026-05-22/neural_teamcomp_heroes_only.pt")
 
 
 @dataclass

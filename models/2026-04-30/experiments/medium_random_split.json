@@ -51,37 +51,37 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.556,
-      "avg_predicted_team2_win_probability": 0.49887829208374024,
-      "log_loss": 0.6805278625488281,
-      "positive_rate": 0.5165
+      "accuracy": 0.568,
+      "avg_predicted_team2_win_probability": 0.5085646286010742,
+      "log_loss": 0.677992317199707,
+      "positive_rate": 0.5175
     },
     "train": {
-      "accuracy": 0.615,
-      "avg_predicted_team2_win_probability": 0.4969679117202759,
-      "log_loss": 0.6531248254776001,
-      "positive_rate": 0.4855
+      "accuracy": 0.5899375,
+      "avg_predicted_team2_win_probability": 0.5093353290557862,
+      "log_loss": 0.6697486457824707,
+      "positive_rate": 0.5
     }
   },
   "rows": {
     "test": 2000,
     "total": 10000,
     "train": 8000,
-    "train_samples_after_augmentation": 8000
+    "train_samples_after_augmentation": 16000
   },
   "training_args": {
     "architecture": "mean",
     "batch_size": 256,
-    "dataset": "data/new_patch_team_comp_dataset.csv",
+    "dataset": "data/team_comp_dataset_2026-04-30.csv",
     "dropout": 0.2,
     "embedding_dim": 16,
     "epochs": 35,
     "hidden_dim": 128,
     "learning_rate": 0.001,
-    "model_output": "models/experiments/medium_no_swap.pt",
-    "no_swap_augmentation": true,
+    "model_output": "models/2026-04-30/experiments/medium_random_split.pt",
+    "no_swap_augmentation": false,
     "seed": 42,
-    "split": "time",
+    "split": "random",
     "test_fraction": 0.2,
     "use_badge": false,
     "use_pp_score": false,

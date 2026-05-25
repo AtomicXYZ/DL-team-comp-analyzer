@@ -17,7 +17,7 @@ if str(TRAINING_DIR) not in sys.path:
 from train_neural_teamcomp import ModelConfig, TeamCompNet  # noqa: E402
 
 
-MODEL_PATH = REPO_ROOT / "models" / "neural_teamcomp_heroes_only.pt"
+MODEL_PATH = REPO_ROOT / "models" / "2026-05-22" / "neural_teamcomp_heroes_only.pt"
 METADATA_PATH = MODEL_PATH.with_suffix(".json")
 
 HERO_NAMES = {
@@ -73,6 +73,13 @@ def load_model() -> tuple[TeamCompNet, dict[str, int], dict]:
     return model, checkpoint["hero_to_index"], metadata
 
 
+def trained_patch_label(metadata: dict) -> str:
+    dataset = metadata.get("training_args", {}).get("dataset", "")
+    filename = Path(dataset).stem
+    prefix = "team_comp_dataset_"
+    return filename[len(prefix) :] if filename.startswith(prefix) else "unknown"
+
+
 def hero_label(hero_id: str) -> str:
     return f"{HERO_NAMES.get(hero_id, 'Hero ' + hero_id)} ({hero_id})"
 
@@ -115,7 +122,8 @@ def main() -> None:
     options = sorted(hero_to_index, key=lambda value: HERO_NAMES.get(value, value))
 
     st.title("Deadlock Team Comp Analyzer")
-    st.caption("PyTorch model trained on normal matches from the 2026-04-30 patch. Current model uses hero picks only.")
+    patch = trained_patch_label(metadata)
+    st.caption(f"PyTorch model trained on normal matches from the {patch} patch. Current model uses hero picks only.")
 
     with st.sidebar:
         st.header("Model")

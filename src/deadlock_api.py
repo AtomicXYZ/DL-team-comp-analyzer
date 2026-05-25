@@ -77,7 +77,7 @@ class DeadlockApiClient:
                 status_code=exc.code,
                 retry_after_seconds=retry_after_seconds,
             ) from exc
-        except URLError as exc:
+        except (URLError, TimeoutError) as exc:
             raise DeadlockApiError(f"Could not reach Deadlock API at {url}") from exc
 
         try:

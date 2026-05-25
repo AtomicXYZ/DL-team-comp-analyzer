@@ -1,11 +1,11 @@
 {
-  "best_epoch": 14,
+  "best_epoch": 12,
   "config": {
     "architecture": "pool",
     "dropout": 0.4,
-    "embedding_dim": 8,
+    "embedding_dim": 16,
     "extra_feature_dim": 0,
-    "hidden_dim": 64,
+    "hidden_dim": 96,
     "num_heroes": 38,
     "use_badge": false,
     "use_pp_score": false
@@ -52,22 +52,22 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.566,
-      "avg_predicted_team2_win_probability": 0.4943652572631836,
-      "log_loss": 0.6804863815307617,
-      "positive_rate": 0.5165
+      "accuracy": 0.5885,
+      "avg_predicted_team2_win_probability": 0.4811146125793457,
+      "log_loss": 0.6740822143554688,
+      "positive_rate": 0.494
     },
     "train": {
-      "accuracy": 0.5861764705882353,
-      "avg_predicted_team2_win_probability": 0.4947511362328249,
-      "log_loss": 0.6703554461984074,
+      "accuracy": 0.6009558823529412,
+      "avg_predicted_team2_win_probability": 0.48341248862883623,
+      "log_loss": 0.6645307986876544,
       "positive_rate": 0.5
     },
     "validation": {
-      "accuracy": 0.5625,
-      "avg_predicted_team2_win_probability": 0.49192261377970375,
-      "log_loss": 0.6855873998006184,
-      "positive_rate": 0.4791666666666667
+      "accuracy": 0.5841666666666666,
+      "avg_predicted_team2_win_probability": 0.479262212117513,
+      "log_loss": 0.6699983596801757,
+      "positive_rate": 0.4741666666666667
     }
   },
   "rows": {
@@ -80,18 +80,18 @@
   "training_args": {
     "architecture": "pool",
     "batch_size": 256,
-    "dataset": "data/new_patch_team_comp_dataset.csv",
+    "dataset": "data/team_comp_dataset_2026-05-22.csv",
     "dropout": 0.4,
-    "embedding_dim": 8,
+    "embedding_dim": 16,
     "epochs": 80,
     "grad_clip": 1.0,
-    "hidden_dim": 64,
-    "l1_lambda": 3e-07,
-    "learning_rate": 0.0007,
+    "hidden_dim": 96,
+    "l1_lambda": 5e-07,
+    "learning_rate": 0.0005,
     "min_delta": 0.0001,
-    "model_output": "models/experiments/regularized_pool_small.pt",
+    "model_output": "models/2026-05-22/neural_teamcomp_heroes_only.pt",
     "no_swap_augmentation": false,
-    "patience": 6,
+    "patience": 8,
     "seed": 42,
     "split": "time",
     "test_fraction": 0.2,
