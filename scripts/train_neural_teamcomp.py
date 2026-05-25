@@ -29,6 +29,7 @@ class ModelConfig:
     use_pp_score: bool
     extra_feature_dim: int
     num_heroes: int
+    activation: str = "relu"
 
 
 class TeamCompDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]):
@@ -49,7 +50,11 @@ class TeamCompDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor, to
             target = 1.0 if row["winner_team_index"] == "1" else 0.0
             self.samples.append((team_1, team_2, extra, target))
             if augment_swap:
-                swapped_extra = [-value for value in extra]
+                swapped_extra = swap_extra_features(
+                    extra,
+                    use_badge=use_badge,
+                    use_pp_score=use_pp_score,
+                )
                 self.samples.append((team_2, team_1, swapped_extra, 1.0 - target))
 
     def __len__(self) -> int:
@@ -73,10 +78,10 @@ class TeamCompNet(nn.Module):
         input_dim = self._encoded_dim(config) + config.extra_feature_dim
         self.network = nn.Sequential(
             nn.Linear(input_dim, config.hidden_dim),
-            nn.ReLU(),
+            activation_layer(config.activation),
             nn.Dropout(config.dropout),
             nn.Linear(config.hidden_dim, config.hidden_dim // 2),
-            nn.ReLU(),
+            activation_layer(config.activation),
             nn.Dropout(config.dropout),
             nn.Linear(config.hidden_dim // 2, 1),
         )
@@ -159,6 +164,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hidden-dim", type=int, default=128)
     parser.add_argument("--dropout", type=float, default=0.15)
     parser.add_argument("--architecture", choices=("mean", "pool", "matchup"), default="mean")
+    parser.add_argument("--activation", choices=("relu", "gelu", "silu"), default="relu")
     parser.add_argument("--test-fraction", type=float, default=0.2)
     parser.add_argument("--validation-fraction", type=float, default=0.15)
     parser.add_argument("--patience", type=int, default=8)
@@ -218,6 +224,7 @@ def main() -> int:
         use_pp_score=args.use_pp_score,
         extra_feature_dim=extra_feature_dim(args.use_badge, args.use_pp_score),
         num_heroes=len(hero_to_index),
+        activation=args.activation,
     )
     model = TeamCompNet(config).to(device)
     optimizer = torch.optim.AdamW(
@@ -405,7 +412,28 @@ def extra_features(row: dict[str, str], *, use_badge: bool, use_pp_score: bool) 
 
 
 def extra_feature_dim(use_badge: bool, use_pp_score: bool) -> int:
-    return (1 if use_badge else 0) + (5 if use_pp_score else 0)
+    return (1 if use_badge else 0) + (6 if use_pp_score else 0)
+
+
+def swap_extra_features(features: list[float], *, use_badge: bool, use_pp_score: bool) -> list[float]:
+    swapped: list[float] = []
+    index = 0
+    if use_badge:
+        swapped.append(-features[index])
+        index += 1
+    if use_pp_score:
+        pp_features = features[index : index + 6]
+        swapped.extend(
+            [
+                -pp_features[0],
+                -pp_features[1],
+                -pp_features[2],
+                -pp_features[3],
+                pp_features[4],
+                pp_features[5],
+            ]
+        )
+    return swapped
 
 
 def badge_features(row: dict[str, str]) -> list[float]:
@@ -427,8 +455,11 @@ def pp_score_features(row: dict[str, str]) -> list[float]:
         for index in range(1, 7)
         if (value := int_or_none(row.get(f"team_2_pp_score_{index}"))) is not None
     ]
+    observed_scores = team_1_scores + team_2_scores
+    coverage = len(observed_scores) / 12.0
+    lobby_mean = sum(observed_scores) / len(observed_scores) / 10000.0 if observed_scores else 0.0
     if not team_1_scores or not team_2_scores:
-        return [0.0, 0.0, 0.0, 0.0, 0.0]
+        return [0.0, 0.0, 0.0, 0.0, coverage, lobby_mean]
 
     team_1_mean = sum(team_1_scores) / len(team_1_scores)
     team_2_mean = sum(team_2_scores) / len(team_2_scores)
@@ -437,7 +468,8 @@ def pp_score_features(row: dict[str, str]) -> list[float]:
         (min(team_2_scores) - min(team_1_scores)) / 10000.0,
         (max(team_2_scores) - max(team_1_scores)) / 10000.0,
         (len(team_2_scores) - len(team_1_scores)) / 6.0,
-        (len(team_1_scores) + len(team_2_scores)) / 12.0,
+        coverage,
+        lobby_mean,
     ]
 
 
@@ -459,6 +491,16 @@ def pairwise_summary(team_1_embeddings: torch.Tensor, team_2_embeddings: torch.T
         ],
         dim=1,
     )
+
+
+def activation_layer(name: str) -> nn.Module:
+    if name == "relu":
+        return nn.ReLU()
+    if name == "gelu":
+        return nn.GELU()
+    if name == "silu":
+        return nn.SiLU()
+    raise ValueError(f"Unknown activation: {name}")
 
 
 def l1_penalty(model: nn.Module) -> torch.Tensor:

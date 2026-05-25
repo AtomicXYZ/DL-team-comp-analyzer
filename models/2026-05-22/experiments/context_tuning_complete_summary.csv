@@ -1,0 +1,5 @@
+name,activation,embedding_dim,hidden_dim,dropout,learning_rate,weight_decay,l1_lambda,best_epoch,validation_accuracy,validation_log_loss,test_accuracy,test_log_loss,model_path
+context_gelu_balanced_complete,gelu,16,96,0.35,0.0005,0.001,0.0000003,6,0.5247,0.6888,0.5556,0.6845,models/2026-05-22/experiments/context_gelu_balanced_complete.pt
+context_silu_balanced_complete,silu,16,96,0.35,0.0005,0.001,0.0000003,6,0.5216,0.6882,0.5630,0.6845,models/2026-05-22/experiments/context_silu_balanced_complete.pt
+context_gelu_medium_complete,gelu,24,128,0.40,0.0004,0.0015,0.0000003,1,0.4568,0.6948,0.5759,0.6899,models/2026-05-22/experiments/context_gelu_medium_complete.pt
+context_relu_lower_reg_complete,relu,16,96,0.30,0.0007,0.001,0.0000003,4,0.5154,0.6877,0.5463,0.6880,models/2026-05-22/experiments/context_relu_lower_reg_complete.pt
