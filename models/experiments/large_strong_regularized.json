@@ -1,0 +1,90 @@
+{
+  "config": {
+    "architecture": "mean",
+    "dropout": 0.45,
+    "embedding_dim": 32,
+    "extra_feature_dim": 0,
+    "hidden_dim": 256,
+    "num_heroes": 38,
+    "use_badge": false,
+    "use_pp_score": false
+  },
+  "hero_to_index": {
+    "1": 0,
+    "10": 7,
+    "11": 8,
+    "12": 9,
+    "13": 10,
+    "14": 11,
+    "15": 12,
+    "16": 13,
+    "17": 14,
+    "18": 15,
+    "19": 16,
+    "2": 1,
+    "20": 17,
+    "25": 18,
+    "27": 19,
+    "3": 2,
+    "31": 20,
+    "35": 21,
+    "4": 3,
+    "50": 22,
+    "52": 23,
+    "58": 24,
+    "6": 4,
+    "60": 25,
+    "63": 26,
+    "64": 27,
+    "65": 28,
+    "66": 29,
+    "67": 30,
+    "69": 31,
+    "7": 5,
+    "72": 32,
+    "76": 33,
+    "77": 34,
+    "79": 35,
+    "8": 6,
+    "80": 36,
+    "81": 37
+  },
+  "metrics": {
+    "test": {
+      "accuracy": 0.5555,
+      "avg_predicted_team2_win_probability": 0.4885745735168457,
+      "log_loss": 0.6804720001220703,
+      "positive_rate": 0.5165
+    },
+    "train": {
+      "accuracy": 0.608,
+      "avg_predicted_team2_win_probability": 0.4891683304309845,
+      "log_loss": 0.6574826183319091,
+      "positive_rate": 0.5
+    }
+  },
+  "rows": {
+    "test": 2000,
+    "total": 10000,
+    "train": 8000,
+    "train_samples_after_augmentation": 16000
+  },
+  "training_args": {
+    "architecture": "mean",
+    "batch_size": 256,
+    "dataset": "data/new_patch_team_comp_dataset.csv",
+    "dropout": 0.45,
+    "embedding_dim": 32,
+    "epochs": 60,
+    "hidden_dim": 256,
+    "learning_rate": 0.0004,
+    "model_output": "models/experiments/large_strong_regularized.pt",
+    "no_swap_augmentation": false,
+    "seed": 42,
+    "split": "time",
+    "test_fraction": 0.2,
+    "use_badge": false,
+    "use_pp_score": false,
+    "weight_decay": 0.002
+  }
+}

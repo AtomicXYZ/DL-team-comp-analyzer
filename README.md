@@ -5,14 +5,14 @@ team compositions.
 
 ## Current Project Flow
 
-The project now has one clear v2 pipeline:
+The project has one clear pipeline:
 
 ```text
 Deadlock API normal matches
-  -> data/v2/new_patch_matches.jsonl
-  -> data/v2/new_patch_team_comp_dataset.csv
+  -> data/new_patch_matches.jsonl
+  -> data/new_patch_team_comp_dataset.csv
   -> PyTorch neural network
-  -> models/v2/neural_teamcomp_heroes_only.pt
+  -> models/neural_teamcomp_heroes_only.pt
 ```
 
 ## Main Commands
@@ -21,9 +21,9 @@ Fetch 10k normal matches, newest first:
 
 ```bash
 cd /root/DL-team-comp-analyzer
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_matches.py \
-  --output data/v2/new_patch_matches.jsonl \
-  --state-file data/v2/new_patch_fetch_state.json \
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/fetch_matches.py \
+  --output data/new_patch_matches.jsonl \
+  --state-file data/new_patch_fetch_state.json \
   --target-count 10000 \
   --batch-size 100 \
   --order-direction desc \
@@ -33,18 +33,18 @@ cd /root/DL-team-comp-analyzer
 Build the training CSV:
 
 ```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/build_dataset.py \
-  --matches data/v2/new_patch_matches.jsonl \
-  --pp-scores data/v2/pp_scores.json \
-  --output data/v2/new_patch_team_comp_dataset.csv
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/build_dataset.py \
+  --matches data/new_patch_matches.jsonl \
+  --pp-scores data/pp_scores.json \
+  --output data/new_patch_team_comp_dataset.csv
 ```
 
 Train the neural network:
 
 ```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/train_neural_teamcomp.py \
-  --dataset data/v2/new_patch_team_comp_dataset.csv \
-  --model-output models/v2/neural_teamcomp_heroes_only.pt \
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/train_neural_teamcomp.py \
+  --dataset data/new_patch_team_comp_dataset.csv \
+  --model-output models/neural_teamcomp_heroes_only.pt \
   --epochs 25
 ```
 
@@ -60,9 +60,9 @@ Run the Streamlit demo:
 
 The main model is in:
 
-- `scripts/v2/train_neural_teamcomp.py`
-- `models/v2/neural_teamcomp_heroes_only.pt`
-- `models/v2/neural_teamcomp_heroes_only.json`
+- `scripts/train_neural_teamcomp.py`
+- `models/neural_teamcomp_heroes_only.pt`
+- `models/neural_teamcomp_heroes_only.json`
 
 Input:
 
@@ -94,13 +94,13 @@ experiment, but the main model intentionally avoids that team-average rank summa
 These scripts are kept because individual player ppScore/rank can be added later:
 
 ```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/extract_accounts.py \
-  --matches data/v2/new_patch_matches.jsonl \
-  --output data/v2/accounts.txt
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/extract_accounts.py \
+  --matches data/new_patch_matches.jsonl \
+  --output data/accounts.txt
 
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/v2/fetch_pp_scores.py \
-  --accounts data/v2/accounts.txt \
-  --output data/v2/pp_scores.json
+/root/DL-team-comp-analyzer/.venv/bin/python scripts/fetch_pp_scores.py \
+  --accounts data/accounts.txt \
+  --output data/pp_scores.json
 ```
 
 You need a `.env` file with:
@@ -111,12 +111,28 @@ STATLOCKER_API_KEY=your_key_here
 
 ## Kept Scripts
 
-- `scripts/v2/fetch_matches.py`: fetch normal Deadlock match summaries.
-- `scripts/v2/build_dataset.py`: convert JSONL matches to training CSV.
-- `scripts/v2/train_neural_teamcomp.py`: train the PyTorch model.
-- `scripts/v2/extract_accounts.py`: optional account list for Statlocker.
-- `scripts/v2/fetch_pp_scores.py`: optional Statlocker ppScore fetch.
-- `scripts/v2/common.py`: shared file helpers and paths.
+- `scripts/fetch_matches.py`: fetch normal Deadlock match summaries.
+- `scripts/build_dataset.py`: convert JSONL matches to training CSV.
+- `scripts/train_neural_teamcomp.py`: train the PyTorch model.
+- `scripts/extract_accounts.py`: optional account list for Statlocker.
+- `scripts/fetch_pp_scores.py`: optional Statlocker ppScore fetch.
+- `scripts/common.py`: shared file helpers and paths.
 - `app/streamlit_app.py`: interactive lineup-vs-lineup demo.
 
 Old v1/debug scripts were removed to keep the project focused.
+
+## Project Layout
+
+- `scripts/`: commands you run for fetching, dataset building and training.
+- `src/`: small reusable API and match-parsing modules used by the scripts.
+- `data/`: local fetched/cached data; generated files are ignored by Git.
+- `models/`: the selected application models and retained experiment results.
+
+## Saved Models
+
+- `models/neural_teamcomp_heroes_only.pt`: main model used by the Streamlit app.
+- `models/neural_teamcomp_heroes_badge.pt`: comparison model using average badge.
+- `models/experiments/*.json` and `summary.csv`: retained experiment results.
+
+Experimental `.pt` checkpoints are not kept in Git; train them again from their
+recorded configuration when needed.

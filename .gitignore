@@ -5,6 +5,11 @@ __pycache__/
 .env.*
 !.env.example
 data/raw/*.json
-data/v2/
-data/processed/statlocker_profile_ranks.json
-data/processed/statlocker_profile_pp_scores.json
+data/accounts.txt
+data/*fetch_state*.json
+data/*matches*.jsonl
+data/*dataset*.csv
+data/pp_scores.json
+data/*.log
+data/processed/
+models/experiments/*.pt

@@ -10,14 +10,14 @@ import torch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-TRAINING_DIR = REPO_ROOT / "scripts" / "v2"
+TRAINING_DIR = REPO_ROOT / "scripts"
 if str(TRAINING_DIR) not in sys.path:
     sys.path.insert(0, str(TRAINING_DIR))
 
 from train_neural_teamcomp import ModelConfig, TeamCompNet  # noqa: E402
 
 
-MODEL_PATH = REPO_ROOT / "models" / "v2" / "neural_teamcomp_heroes_only.pt"
+MODEL_PATH = REPO_ROOT / "models" / "neural_teamcomp_heroes_only.pt"
 METADATA_PATH = MODEL_PATH.with_suffix(".json")
 
 HERO_NAMES = {
