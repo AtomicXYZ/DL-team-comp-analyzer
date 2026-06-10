@@ -10,21 +10,22 @@ The project has one clear pipeline:
 ```text
 Deadlock API normal matches
   -> data/matches_2026-05-22.jsonl
-  -> data/team_comp_dataset_2026-05-22.csv
+  -> data/team_comp_dataset_2026-05-22_20k.csv
   -> PyTorch neural network
   -> models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt
 ```
 
 ## Main Commands
 
-Fetch 10k normal matches, newest first:
+Fetch normal matches, newest first. The selected model was trained on 20k
+matches from patch `2026-05-22`:
 
 ```bash
 cd /root/DL-team-comp-analyzer
 /root/DL-team-comp-analyzer/.venv/bin/python scripts/fetch_matches.py \
   --output data/matches_2026-05-22.jsonl \
   --state-file data/fetch_state_2026-05-22.json \
-  --target-count 10000 \
+  --target-count 20000 \
   --batch-size 100 \
   --required-patch 2026-05-22 \
   --order-direction desc \
@@ -40,16 +41,27 @@ Build the training CSV:
 /root/DL-team-comp-analyzer/.venv/bin/python scripts/build_dataset.py \
   --matches data/matches_2026-05-22.jsonl \
   --pp-scores data/pp_scores.json \
-  --output data/team_comp_dataset_2026-05-22.csv
+  --output data/team_comp_dataset_2026-05-22_20k.csv
 ```
 
-Train the neural network:
+Train the selected rank-aware neural network:
 
 ```bash
 /root/DL-team-comp-analyzer/.venv/bin/python scripts/train_neural_teamcomp.py \
-  --dataset data/team_comp_dataset_2026-05-22.csv \
-  --model-output models/2026-05-22/neural_teamcomp_heroes_only.pt \
-  --epochs 25
+  --dataset data/team_comp_dataset_2026-05-22_20k.csv \
+  --model-output models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt \
+  --epochs 80 \
+  --architecture pool \
+  --activation silu \
+  --embedding-dim 24 \
+  --hidden-dim 128 \
+  --dropout 0.40 \
+  --learning-rate 0.0004 \
+  --weight-decay 0.0015 \
+  --l1-lambda 0.0000003 \
+  --patience 8 \
+  --batch-size 256 \
+  --use-pp-score
 ```
 
 Run the Streamlit demo:
@@ -72,16 +84,17 @@ assets from the Deadlock API with:
 
 ## Neural Model
 
-The main model is in:
+The training code is in:
 
 - `scripts/train_neural_teamcomp.py`
-- `models/2026-05-22/neural_teamcomp_heroes_only.pt`
-- `models/2026-05-22/neural_teamcomp_heroes_only.json`
+- `models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt`
+- `models/2026-05-22/neural_teamcomp_heroes_ppscore_context.json`
 
 Input:
 
 - 6 hero IDs for team 1
 - 6 hero IDs for team 2
+- Statlocker ppScore context features derived from team/player ppScores
 
 Target:
 
@@ -136,7 +149,19 @@ Re-run that focused sweep with:
 A corrected comparison on only the `2698` fully ranked matches did not improve
 validation performance: the best ppScore context model reached validation log
 loss `0.6877`, versus `0.6860` for heroes-only on that subset. The app
-therefore keeps the `10000`-match context model.
+therefore keeps the `20000`-match context model with partial ppScore coverage.
+
+## Limitations
+
+- The model predicts from draft and rank context only. It does not know player
+  hero mastery, premades, lane assignments, builds, disconnects or in-game form.
+- Statlocker ppScore coverage is partial. Missing player ppScores are encoded
+  through coverage and lobby-level features rather than dropping most matches.
+- A 60% test accuracy is realistic for this noisy task, but not enough for
+  deterministic recommendations. The app should be read as a probabilistic
+  team-comp aid.
+- Future improvements should focus on richer features such as hero-specific
+  player history, synergy/counter statistics and larger same-patch datasets.
 
 ## Optional Statlocker ppScore Step
 
