@@ -19,6 +19,7 @@ from train_neural_teamcomp import ModelConfig, TeamCompNet, pp_score_features  #
 
 MODEL_PATH = REPO_ROOT / "models" / "2026-05-22" / "neural_teamcomp_heroes_ppscore_context.pt"
 METADATA_PATH = MODEL_PATH.with_suffix(".json")
+HERO_IMAGE_MANIFEST_PATH = REPO_ROOT / "app" / "assets" / "hero_images.json"
 DEFAULT_PP_SCORE = 3200
 MIN_PP_SCORE = 0
 
@@ -88,6 +89,19 @@ def load_model() -> tuple[TeamCompNet, dict[str, int], dict]:
     return model, checkpoint["hero_to_index"], metadata
 
 
+@st.cache_data
+def load_hero_images() -> dict[str, Path]:
+    if not HERO_IMAGE_MANIFEST_PATH.exists():
+        return {}
+    payload = json.loads(HERO_IMAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
+    images: dict[str, Path] = {}
+    for hero_id, metadata in payload.items():
+        image_path = REPO_ROOT / "app" / "assets" / str(metadata.get("image", ""))
+        if image_path.exists():
+            images[str(hero_id)] = image_path
+    return images
+
+
 def trained_patch_label(metadata: dict) -> str:
     dataset = metadata.get("training_args", {}).get("dataset", "")
     filename = Path(dataset).stem
@@ -97,6 +111,24 @@ def trained_patch_label(metadata: dict) -> str:
 
 def hero_label(hero_id: str) -> str:
     return f"{HERO_NAMES.get(hero_id, 'Hero ' + hero_id)} ({hero_id})"
+
+
+def render_hero_portrait(hero_id: str, images: dict[str, Path]) -> None:
+    image_path = images.get(hero_id)
+    hero_name = HERO_NAMES.get(hero_id, f"Hero {hero_id}")
+    if image_path:
+        st.image(str(image_path), caption=hero_name, width="stretch")
+        return
+
+    st.markdown(
+        f"""
+        <div class="hero-fallback">
+          <div class="hero-fallback-id">{hero_id}</div>
+          <div class="hero-fallback-name">{hero_name}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def pp_score_rank_label(pp_score: int) -> str:
@@ -143,17 +175,20 @@ def lineup_picker(
     *,
     score_mode: str,
     team_score: int | None,
+    hero_images: dict[str, Path],
 ) -> tuple[list[str], list[int]]:
     st.subheader(title)
     picks: list[str] = []
     scores: list[int] = []
-    columns = st.columns(3)
+    columns = st.columns(6)
     for index in range(6):
-        with columns[index % 3]:
+        with columns[index]:
+            current_pick = st.session_state.get(f"{key_prefix}_{index}", defaults[index])
+            render_hero_portrait(str(current_pick), hero_images)
             pick = st.selectbox(
                 f"Slot {index + 1}",
                 options,
-                index=options.index(st.session_state.get(f"{key_prefix}_{index}", defaults[index])),
+                index=options.index(current_pick),
                 format_func=hero_label,
                 key=f"{key_prefix}_{index}",
             )
@@ -176,7 +211,39 @@ def lineup_picker(
 
 def main() -> None:
     st.set_page_config(page_title="Deadlock Team Comp Analyzer", page_icon="DL", layout="wide")
+    st.markdown(
+        """
+        <style>
+        .hero-fallback {
+            align-items: center;
+            aspect-ratio: 16 / 9;
+            background: #20232d;
+            border: 1px solid #3b4050;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin-bottom: 0.35rem;
+            min-height: 92px;
+        }
+        .hero-fallback-id {
+            color: #f2f2f2;
+            font-size: 1.35rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .hero-fallback-name {
+            color: #aeb4c4;
+            font-size: 0.8rem;
+            margin-top: 0.35rem;
+            text-align: center;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     model, hero_to_index, metadata = load_model()
+    hero_images = load_hero_images()
     options = sorted(hero_to_index, key=lambda value: HERO_NAMES.get(value, value))
 
     st.title("Deadlock Team Comp Analyzer")
@@ -218,8 +285,7 @@ def main() -> None:
     team_1_score: int | None = None
     team_2_score: int | None = None
     if score_mode == "Team average":
-        rank_left, rank_right = st.columns(2)
-        with rank_left:
+        with st.container():
             team_1_score = int(
                 st.number_input(
                     "Team 1 average ppScore",
@@ -230,7 +296,7 @@ def main() -> None:
                 )
             )
             st.caption(pp_score_rank_label(team_1_score))
-        with rank_right:
+        with st.container():
             team_2_score = int(
                 st.number_input(
                     "Team 2 average ppScore",
@@ -242,25 +308,25 @@ def main() -> None:
             )
             st.caption(pp_score_rank_label(team_2_score))
 
-    left, right = st.columns(2)
-    with left:
-        team_1, team_1_scores = lineup_picker(
-            "Team 1",
-            options,
-            default_team_1,
-            "team_1",
-            score_mode=score_mode,
-            team_score=team_1_score,
-        )
-    with right:
-        team_2, team_2_scores = lineup_picker(
-            "Team 2",
-            options,
-            default_team_2,
-            "team_2",
-            score_mode=score_mode,
-            team_score=team_2_score,
-        )
+    team_1, team_1_scores = lineup_picker(
+        "Team 1",
+        options,
+        default_team_1,
+        "team_1",
+        score_mode=score_mode,
+        team_score=team_1_score,
+        hero_images=hero_images,
+    )
+    st.divider()
+    team_2, team_2_scores = lineup_picker(
+        "Team 2",
+        options,
+        default_team_2,
+        "team_2",
+        score_mode=score_mode,
+        team_score=team_2_score,
+        hero_images=hero_images,
+    )
 
     all_picks = team_1 + team_2
     duplicate_ids = sorted({hero_id for hero_id in all_picks if all_picks.count(hero_id) > 1}, key=int)
