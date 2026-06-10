@@ -1,15 +1,15 @@
 {
-  "best_epoch": 18,
+  "best_epoch": 16,
   "config": {
     "activation": "silu",
     "architecture": "pool",
     "dropout": 0.4,
     "embedding_dim": 24,
-    "extra_feature_dim": 6,
+    "extra_feature_dim": 0,
     "hidden_dim": 128,
     "num_heroes": 38,
     "use_badge": false,
-    "use_pp_score": true
+    "use_pp_score": false
   },
   "hero_to_index": {
     "1": 0,
@@ -53,21 +53,21 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.60825,
-      "avg_predicted_team2_win_probability": 0.4908296432495117,
-      "log_loss": 0.6572670307159424,
+      "accuracy": 0.5965,
+      "avg_predicted_team2_win_probability": 0.49736440086364747,
+      "log_loss": 0.6625759086608887,
       "positive_rate": 0.49325
     },
     "train": {
-      "accuracy": 0.6073529411764705,
-      "avg_predicted_team2_win_probability": 0.49470974739860085,
-      "log_loss": 0.6555112732157987,
+      "accuracy": 0.5940808823529412,
+      "avg_predicted_team2_win_probability": 0.4999155355201048,
+      "log_loss": 0.6622661636857425,
       "positive_rate": 0.5
     },
     "validation": {
-      "accuracy": 0.595,
-      "avg_predicted_team2_win_probability": 0.4962691020965576,
-      "log_loss": 0.6611435476938884,
+      "accuracy": 0.5854166666666667,
+      "avg_predicted_team2_win_probability": 0.5021056016286214,
+      "log_loss": 0.6684063418706259,
       "positive_rate": 0.49916666666666665
     }
   },
@@ -91,14 +91,14 @@
     "l1_lambda": 3e-07,
     "learning_rate": 0.0004,
     "min_delta": 0.0001,
-    "model_output": "models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt",
+    "model_output": "models/2026-05-22/experiments/heroes_only_silu_20k.pt",
     "no_swap_augmentation": false,
     "patience": 8,
     "seed": 42,
     "split": "time",
     "test_fraction": 0.2,
     "use_badge": false,
-    "use_pp_score": true,
+    "use_pp_score": false,
     "validation_fraction": 0.15,
     "weight_decay": 0.0015
   }

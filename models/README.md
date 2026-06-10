@@ -30,9 +30,15 @@ The Streamlit model now also includes absolute lobby ppScore level, allowing
 hero compositions to vary by skill context. A context-model sweep tested
 activation functions and regularisation settings. The selected `pool` model
 uses `GELU`, embedding dimension `24`, hidden dimension `128`, dropout `0.40`,
-learning rate `0.0004` and weight decay `0.0015`. It achieved the best
-validation loss (`0.6610`), with test accuracy `0.5925` and test log loss
-`0.6641`.
+learning rate `0.0004` and weight decay `0.0015`.
+
+After expanding the patch dataset to `20000` matches, another tuning pass tested
+`SiLU`, lower regularisation and a `matchup` architecture. The selected context
+model now uses `SiLU` with the same embedding and hidden sizes. It achieved
+validation log loss `0.6611`, test accuracy `0.6082` and test log loss `0.6573`
+on its `4000` match holdout. On the previous `10000`-match holdout, it also
+improved validation loss (`0.6563` versus `0.6580`) and accuracy (`0.6095`
+versus `0.6000`) compared with the previous 20k `GELU` checkpoint.
 
 Reproduce the rank-context tuning sweep with:
 

@@ -1,9 +1,9 @@
 {
-  "best_epoch": 18,
+  "best_epoch": 19,
   "config": {
-    "activation": "silu",
-    "architecture": "pool",
-    "dropout": 0.4,
+    "activation": "gelu",
+    "architecture": "matchup",
+    "dropout": 0.45,
     "embedding_dim": 24,
     "extra_feature_dim": 6,
     "hidden_dim": 128,
@@ -53,21 +53,21 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.60825,
-      "avg_predicted_team2_win_probability": 0.4908296432495117,
-      "log_loss": 0.6572670307159424,
+      "accuracy": 0.59575,
+      "avg_predicted_team2_win_probability": 0.4915335731506348,
+      "log_loss": 0.6616582756042481,
       "positive_rate": 0.49325
     },
     "train": {
-      "accuracy": 0.6073529411764705,
-      "avg_predicted_team2_win_probability": 0.49470974739860085,
-      "log_loss": 0.6555112732157987,
+      "accuracy": 0.6193382352941177,
+      "avg_predicted_team2_win_probability": 0.494565932189717,
+      "log_loss": 0.6474774113823386,
       "positive_rate": 0.5
     },
     "validation": {
-      "accuracy": 0.595,
-      "avg_predicted_team2_win_probability": 0.4962691020965576,
-      "log_loss": 0.6611435476938884,
+      "accuracy": 0.58625,
+      "avg_predicted_team2_win_probability": 0.4961555528640747,
+      "log_loss": 0.664719713528951,
       "positive_rate": 0.49916666666666665
     }
   },
@@ -79,19 +79,19 @@
     "validation": 2400
   },
   "training_args": {
-    "activation": "silu",
-    "architecture": "pool",
+    "activation": "gelu",
+    "architecture": "matchup",
     "batch_size": 256,
     "dataset": "data/team_comp_dataset_2026-05-22_20k.csv",
-    "dropout": 0.4,
+    "dropout": 0.45,
     "embedding_dim": 24,
     "epochs": 80,
     "grad_clip": 1.0,
     "hidden_dim": 128,
     "l1_lambda": 3e-07,
-    "learning_rate": 0.0004,
+    "learning_rate": 0.00035,
     "min_delta": 0.0001,
-    "model_output": "models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt",
+    "model_output": "models/2026-05-22/experiments/context_matchup_gelu_20k.pt",
     "no_swap_augmentation": false,
     "patience": 8,
     "seed": 42,
@@ -100,6 +100,6 @@
     "use_badge": false,
     "use_pp_score": true,
     "validation_fraction": 0.15,
-    "weight_decay": 0.0015
+    "weight_decay": 0.002
   }
 }

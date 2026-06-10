@@ -1,7 +1,7 @@
 {
-  "best_epoch": 18,
+  "best_epoch": 13,
   "config": {
-    "activation": "silu",
+    "activation": "gelu",
     "architecture": "pool",
     "dropout": 0.4,
     "embedding_dim": 24,
@@ -53,21 +53,21 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.60825,
-      "avg_predicted_team2_win_probability": 0.4908296432495117,
-      "log_loss": 0.6572670307159424,
+      "accuracy": 0.60075,
+      "avg_predicted_team2_win_probability": 0.4812122039794922,
+      "log_loss": 0.6584096031188965,
       "positive_rate": 0.49325
     },
     "train": {
-      "accuracy": 0.6073529411764705,
-      "avg_predicted_team2_win_probability": 0.49470974739860085,
-      "log_loss": 0.6555112732157987,
+      "accuracy": 0.6072058823529412,
+      "avg_predicted_team2_win_probability": 0.484574989010306,
+      "log_loss": 0.6555671635796042,
       "positive_rate": 0.5
     },
     "validation": {
-      "accuracy": 0.595,
-      "avg_predicted_team2_win_probability": 0.4962691020965576,
-      "log_loss": 0.6611435476938884,
+      "accuracy": 0.5916666666666667,
+      "avg_predicted_team2_win_probability": 0.4867276620864868,
+      "log_loss": 0.6630573225021362,
       "positive_rate": 0.49916666666666665
     }
   },
@@ -79,7 +79,7 @@
     "validation": 2400
   },
   "training_args": {
-    "activation": "silu",
+    "activation": "gelu",
     "architecture": "pool",
     "batch_size": 256,
     "dataset": "data/team_comp_dataset_2026-05-22_20k.csv",
@@ -91,7 +91,7 @@
     "l1_lambda": 3e-07,
     "learning_rate": 0.0004,
     "min_delta": 0.0001,
-    "model_output": "models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt",
+    "model_output": "models/2026-05-22/experiments/context_gelu_medium_20k.pt",
     "no_swap_augmentation": false,
     "patience": 8,
     "seed": 42,

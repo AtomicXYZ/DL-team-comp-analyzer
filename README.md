@@ -114,9 +114,11 @@ cannot adjust a hero composition when both teams move to the same higher rank.
 The Streamlit model therefore uses the context-aware variant in
 `models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt`; it includes
 absolute lobby ppScore. A tuning sweep over activation, layer size, learning
-rate and regularisation selected a `pool` model with `GELU`, embedding
-dimension `24` and hidden dimension `128`: validation log loss `0.6610`, test
-accuracy `0.5925`, and test log loss `0.6641`.
+rate and regularisation selected a `pool` model with embedding dimension `24`
+and hidden dimension `128`. After expanding the patch dataset to `20000`
+matches and testing more variants, the selected model now uses `SiLU` and
+reached validation log loss `0.6611`, test accuracy `0.6082` and test log loss
+`0.6573` on its `4000`-match holdout.
 
 Re-run that focused sweep with:
 

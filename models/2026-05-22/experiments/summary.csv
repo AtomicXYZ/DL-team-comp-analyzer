@@ -4,7 +4,11 @@ neural_teamcomp_heroes_ppscore_partial,false,pool,relu,16,96,0.40,15,0.6680,0.60
 context_relu_reference,false,pool,relu,16,96,0.40,15,0.6674,0.5905,0.6720,heroes_plus_partial_ppscore_and_lobby_level
 context_gelu_balanced,false,pool,gelu,16,96,0.35,21,0.6647,0.5845,0.6700,heroes_plus_partial_ppscore_and_lobby_level
 context_silu_balanced,false,pool,silu,16,96,0.35,27,0.6625,0.5885,0.6690,heroes_plus_partial_ppscore_and_lobby_level
-neural_teamcomp_heroes_ppscore_context,true,pool,gelu,24,128,0.40,12,0.6610,0.5925,0.6641,heroes_plus_partial_ppscore_and_lobby_level
+neural_teamcomp_heroes_ppscore_context,false,pool,gelu,24,128,0.40,12,0.6610,0.5925,0.6641,heroes_plus_partial_ppscore_and_lobby_level_10k
+context_gelu_medium_20k,false,pool,gelu,24,128,0.40,13,0.6631,0.6008,0.6584,heroes_plus_partial_ppscore_and_lobby_level_20k
+neural_teamcomp_heroes_ppscore_context,true,pool,silu,24,128,0.40,18,0.6611,0.6082,0.6573,heroes_plus_partial_ppscore_and_lobby_level_20k
+context_gelu_less_reg_20k,false,pool,gelu,24,128,0.30,12,0.6635,0.6038,0.6568,heroes_plus_partial_ppscore_and_lobby_level_20k
+context_matchup_gelu_20k,false,matchup,gelu,24,128,0.45,19,0.6647,0.5958,0.6617,heroes_plus_partial_ppscore_and_lobby_level_20k
 context_relu_lower_reg,false,pool,relu,16,96,0.30,11,0.6668,0.5875,0.6719,heroes_plus_partial_ppscore_and_lobby_level
 pool_medium_less_dropout,false,pool,relu,16,128,0.35,15,0.6712,0.5885,0.6743,heroes_only
 pool_balanced,false,pool,relu,16,96,0.30,12,0.6706,0.5845,0.6746,heroes_only

@@ -1,9 +1,9 @@
 {
-  "best_epoch": 18,
+  "best_epoch": 12,
   "config": {
-    "activation": "silu",
+    "activation": "gelu",
     "architecture": "pool",
-    "dropout": 0.4,
+    "dropout": 0.3,
     "embedding_dim": 24,
     "extra_feature_dim": 6,
     "hidden_dim": 128,
@@ -53,21 +53,21 @@
   },
   "metrics": {
     "test": {
-      "accuracy": 0.60825,
-      "avg_predicted_team2_win_probability": 0.4908296432495117,
-      "log_loss": 0.6572670307159424,
+      "accuracy": 0.60375,
+      "avg_predicted_team2_win_probability": 0.4932043418884277,
+      "log_loss": 0.6567673950195313,
       "positive_rate": 0.49325
     },
     "train": {
-      "accuracy": 0.6073529411764705,
-      "avg_predicted_team2_win_probability": 0.49470974739860085,
-      "log_loss": 0.6555112732157987,
+      "accuracy": 0.6072794117647059,
+      "avg_predicted_team2_win_probability": 0.4967064461988561,
+      "log_loss": 0.6540983800327077,
       "positive_rate": 0.5
     },
     "validation": {
-      "accuracy": 0.595,
-      "avg_predicted_team2_win_probability": 0.4962691020965576,
-      "log_loss": 0.6611435476938884,
+      "accuracy": 0.5933333333333334,
+      "avg_predicted_team2_win_probability": 0.4991697883605957,
+      "log_loss": 0.6635363753636678,
       "positive_rate": 0.49916666666666665
     }
   },
@@ -79,19 +79,19 @@
     "validation": 2400
   },
   "training_args": {
-    "activation": "silu",
+    "activation": "gelu",
     "architecture": "pool",
     "batch_size": 256,
     "dataset": "data/team_comp_dataset_2026-05-22_20k.csv",
-    "dropout": 0.4,
+    "dropout": 0.3,
     "embedding_dim": 24,
     "epochs": 80,
     "grad_clip": 1.0,
     "hidden_dim": 128,
-    "l1_lambda": 3e-07,
+    "l1_lambda": 2e-07,
     "learning_rate": 0.0004,
     "min_delta": 0.0001,
-    "model_output": "models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt",
+    "model_output": "models/2026-05-22/experiments/context_gelu_less_reg_20k.pt",
     "no_swap_augmentation": false,
     "patience": 8,
     "seed": 42,
@@ -100,6 +100,6 @@
     "use_badge": false,
     "use_pp_score": true,
     "validation_fraction": 0.15,
-    "weight_decay": 0.0015
+    "weight_decay": 0.0008
   }
 }

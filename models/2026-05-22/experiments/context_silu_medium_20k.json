@@ -91,7 +91,7 @@
     "l1_lambda": 3e-07,
     "learning_rate": 0.0004,
     "min_delta": 0.0001,
-    "model_output": "models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt",
+    "model_output": "models/2026-05-22/experiments/context_silu_medium_20k.pt",
     "no_swap_augmentation": false,
     "patience": 8,
     "seed": 42,
