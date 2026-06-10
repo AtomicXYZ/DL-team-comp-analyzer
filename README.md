@@ -112,33 +112,43 @@ team comparison features
 MLP -> probability that team 2 wins
 ```
 
-The heroes-only model remains the baseline. The current Streamlit model adds
-Statlocker ppScore features because that comparison performed better on the
-current-patch test split.
+The heroes-only model remains the baseline. The current Streamlit model is a
+rank-aware ppScore context model trained on the `20000` match dataset:
 
-Current `2026-05-22` heroes-only result:
+- model file: `models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt`
+- architecture: `pool`
+- activation: `SiLU`
+- embedding dimension: `24`
+- hidden dimension: `128`
+- validation log loss: `0.6611`
+- test accuracy: `0.6082`
+- test log loss: `0.6573`
+
+Baseline `2026-05-22` heroes-only result:
 
 - architecture: `pool`
 - best validation epoch: `12`
 - test accuracy: `0.5885`
 - test log loss: `0.6741`
 
-Rank-aware comparison using available ppScores on all `10000` matches:
+## Historical Model Comparisons
+
+An earlier rank-aware comparison used only relative ppScore differences on the
+first `10000` matches:
 
 - ppScore slot coverage: `74.94%`
 - test accuracy: `0.6005`
 - test log loss: `0.6687`
 
-The relative-only rank-aware comparison scored highest on the test split, but
-cannot adjust a hero composition when both teams move to the same higher rank.
-The Streamlit model therefore uses the context-aware variant in
-`models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt`; it includes
-absolute lobby ppScore. A tuning sweep over activation, layer size, learning
-rate and regularisation selected a `pool` model with embedding dimension `24`
-and hidden dimension `128`. After expanding the patch dataset to `20000`
-matches and testing more variants, the selected model now uses `SiLU` and
-reached validation log loss `0.6611`, test accuracy `0.6082` and test log loss
-`0.6573` on its `4000`-match holdout.
+That model scored well, but it could only compare team-vs-team rank
+differences. It could not adjust a prediction when both teams move from a low
+rank lobby to an equally balanced high rank lobby. The current app model fixes
+that by adding absolute lobby ppScore context features such as coverage and
+lobby mean ppScore.
+
+After expanding the dataset to `20000` matches, a second tuning pass tested
+`GELU`, `SiLU`, lower regularisation and a `matchup` architecture. The selected
+model is the `SiLU` context model listed above.
 
 Re-run that focused sweep with:
 

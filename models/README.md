@@ -21,7 +21,7 @@ all 12 players used an older relative-only feature format. A new controlled
 complete-subset sweep retrained the corrected lobby-context features. Its best
 ppScore validation loss was `0.6877`, while a heroes-only model on the same
 subset reached `0.6860`. The clean subset is currently too small to improve on
-the partially filled `10000`-match training set, so it is not promoted.
+the larger partially filled training set, so it is not promoted.
 
 A rank-aware experiment using relative ppScore differences on all `10000`
 matches obtained test accuracy `0.6005` and test log loss `0.6687`. However,
