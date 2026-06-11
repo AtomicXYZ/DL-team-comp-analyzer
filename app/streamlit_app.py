@@ -1,12 +1,12 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-import json
-import random
-import sys
-from pathlib import Path
+import json  # Modelmetadata en hero manifest lezen.
+import random  # Random team lineups maken.
+import sys  # Trainingsscript-map aan importpad toevoegen.
+from pathlib import Path  # Repo-, model- en assetpaden bepalen.
 
-import streamlit as st
-import torch
+import streamlit as st  # Web UI bouwen.
+import torch  # Model laden en voorspelling uitvoeren.
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -14,7 +14,7 @@ TRAINING_DIR = REPO_ROOT / "scripts"
 if str(TRAINING_DIR) not in sys.path:
     sys.path.insert(0, str(TRAINING_DIR))
 
-from train_neural_teamcomp import ModelConfig, TeamCompNet, pp_score_features  # noqa: E402
+from train_neural_teamcomp import ModelConfig, TeamCompNet, pp_score_features  # noqa: E402  # Modelklasse en feature helper hergebruiken.
 
 
 MODEL_PATH = REPO_ROOT / "models" / "2026-05-22" / "neural_teamcomp_heroes_ppscore_context.pt"
@@ -80,6 +80,7 @@ HERO_NAMES = {
 
 @st.cache_resource
 def load_model() -> tuple[TeamCompNet, dict[str, int], dict]:
+    """Laad PyTorch model en metadata eenmalig voor de Streamlit sessie."""
     checkpoint = torch.load(MODEL_PATH, map_location="cpu", weights_only=False)
     config = ModelConfig(**checkpoint["config"])
     model = TeamCompNet(config)
@@ -91,6 +92,7 @@ def load_model() -> tuple[TeamCompNet, dict[str, int], dict]:
 
 @st.cache_data
 def load_hero_images() -> dict[str, Path]:
+    """Laad hero_id -> lokaal afbeeldingspad uit manifest."""
     if not HERO_IMAGE_MANIFEST_PATH.exists():
         return {}
     payload = json.loads(HERO_IMAGE_MANIFEST_PATH.read_text(encoding="utf-8"))
@@ -103,6 +105,7 @@ def load_hero_images() -> dict[str, Path]:
 
 
 def trained_patch_label(metadata: dict) -> str:
+    """Haal patchlabel uit de datasetnaam in modelmetadata."""
     dataset = metadata.get("training_args", {}).get("dataset", "")
     filename = Path(dataset).stem
     prefix = "team_comp_dataset_"
@@ -110,10 +113,12 @@ def trained_patch_label(metadata: dict) -> str:
 
 
 def hero_label(hero_id: str) -> str:
+    """Maak selectbox-label met hero naam en id."""
     return f"{HERO_NAMES.get(hero_id, 'Hero ' + hero_id)} ({hero_id})"
 
 
 def render_hero_portrait(hero_id: str, images: dict[str, Path]) -> None:
+    """Toon hero-afbeelding of fallback-tegel."""
     image_path = images.get(hero_id)
     hero_name = HERO_NAMES.get(hero_id, f"Hero {hero_id}")
     if image_path:
@@ -132,6 +137,7 @@ def render_hero_portrait(hero_id: str, images: dict[str, Path]) -> None:
 
 
 def pp_score_rank_label(pp_score: int) -> str:
+    """Zet numerieke ppScore om naar ranklabel."""
     if pp_score >= 6600:
         return "Eternus 6+"
     if pp_score >= 6000:
@@ -143,6 +149,7 @@ def pp_score_rank_label(pp_score: int) -> str:
 
 
 def formatted_pp_score(pp_score: int) -> str:
+    """Formatteer ppScore met bijhorend ranklabel."""
     return f"{pp_score} PP ({pp_score_rank_label(pp_score)})"
 
 
@@ -154,6 +161,7 @@ def predict_team_2_probability(
     team_1_scores: list[int],
     team_2_scores: list[int],
 ) -> float:
+    """Bereken modelkans dat team 2 wint voor de gekozen lineups."""
     team_1_tensor = torch.tensor([[hero_to_index[hero_id] for hero_id in team_1]], dtype=torch.long)
     team_2_tensor = torch.tensor([[hero_to_index[hero_id] for hero_id in team_2]], dtype=torch.long)
     score_row = {
@@ -177,6 +185,7 @@ def lineup_picker(
     team_score: int | None,
     hero_images: dict[str, Path],
 ) -> tuple[list[str], list[int]]:
+    """Render zes hero-picks plus ppScore inputs voor één team."""
     st.subheader(title)
     picks: list[str] = []
     scores: list[int] = []
@@ -210,6 +219,7 @@ def lineup_picker(
 
 
 def main() -> None:
+    """Render de Streamlit app en toon voorspelde win-kansen."""
     st.set_page_config(page_title="Deadlock Team Comp Analyzer", page_icon="DL", layout="wide")
     st.markdown(
         """

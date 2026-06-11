@@ -1203,7 +1203,6 @@ Voorbeelden:
 
 Bestand:
 
-- `scripts/download_hero_assets.py`
 - `app/assets/hero_images.json`
 - `app/assets/heroes/`
 
@@ -1505,4 +1504,3 @@ L_total = L_BCE + λ * sum(|w|)
 ```
 
 Dit is het hart van het deep learning-gedeelte: een neural network met embeddinglaag, pooling, extra rankfeatures, nonlinear activations, loss, backpropagation en parameterupdates.
-

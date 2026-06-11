@@ -1,15 +1,15 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
-from typing import Any, Callable
+from dataclasses import asdict, dataclass  # Dataclasses maken nette match/speler objecten.
+from datetime import UTC, datetime  # Starttijden parsen en als UTC tonen.
+from typing import Any, Callable  # Flexibele JSON-types en hero lookup callback.
 
-from patch_history import infer_patch_from_start_time
+from patch_history import infer_patch_from_start_time  # Patch afleiden als API geen patchveld geeft.
 
 
-HeroResolver = Callable[[int | str | None], str]
+HeroResolver = Callable[[int | str | None], str] # functie die een hero ID omzet naar een naam.
 
-_PLAYER_LIST_KEYS = (
+_PLAYER_LIST_KEYS = ( # mogelijke namen
     "players",
     "match_players",
     "player_slots",
@@ -36,6 +36,7 @@ _WINNER_KEYS = (
 
 @dataclass
 class PlayerView:
+    """Genormaliseerde spelerdata binnen een match."""
     player_name: str
     account_id: str
     hero_id: str
@@ -47,6 +48,7 @@ class PlayerView:
 
 @dataclass
 class MatchView:
+    """Genormaliseerde matchdata met twee teams en metadata."""
     match_id: str
     start_time_s: int | None
     start_time_utc: str
@@ -65,6 +67,7 @@ class MatchView:
 def build_match_view(
     metadata: dict[str, Any], hero_resolver: HeroResolver | None = None
 ) -> MatchView:
+    """Zet een raw match-dict om naar een nette MatchView."""
     hero_lookup = hero_resolver or (lambda hero_id: f"Hero {hero_id}" if hero_id is not None else "Unknown Hero")
     root = _unwrap_match_payload(metadata)
     players = _find_players(root)
@@ -133,6 +136,7 @@ def build_match_view(
 
 
 def match_view_to_dict(match_view: MatchView) -> dict[str, Any]:
+    """Zet MatchView om naar een JSON-vriendelijke dict."""
     return {
         "match_id": match_view.match_id,
         "start_time_s": match_view.start_time_s,
@@ -155,6 +159,7 @@ def match_view_to_dict(match_view: MatchView) -> dict[str, Any]:
 
 
 def format_match_view(match_view: MatchView) -> str:
+    """Maak een leesbare tekstweergave van een MatchView."""
     lines = [
         f"Match ID : {match_view.match_id}",
         f"Played   : {match_view.start_time_utc}",
@@ -178,6 +183,7 @@ def format_match_view(match_view: MatchView) -> str:
 
 
 def match_view_to_dataset_row(match_view: MatchView) -> dict[str, str]:
+    """Maak een platte dataset-rij direct uit een MatchView."""
     team_1_heroes = _hero_columns(match_view.team_1_players, prefix="team_1")
     team_2_heroes = _hero_columns(match_view.team_2_players, prefix="team_2")
     team_1_accounts = _account_columns(match_view.team_1_players, prefix="team_1")
@@ -205,6 +211,7 @@ def match_view_to_dataset_row(match_view: MatchView) -> dict[str, str]:
 
 
 def dataset_fieldnames() -> list[str]:
+    """Geef de vaste kolomnamen voor een team-comp dataset."""
     return [
         "match_id",
         "start_time_s",
@@ -225,6 +232,7 @@ def dataset_fieldnames() -> list[str]:
 
 
 def summary_payload_to_dataset_row(summary: dict[str, Any]) -> dict[str, str]:
+    """Maak een dataset-rij uit een opgeslagen match-summary dict."""
     team_1_players = summary.get("team_1_players")
     team_2_players = summary.get("team_2_players")
     team_1_heroes = _player_value_columns(team_1_players, prefix="team_1", key="hero_id", fallback="")
@@ -272,6 +280,7 @@ def summary_payload_to_dataset_row(summary: dict[str, Any]) -> dict[str, str]:
 def _format_team_block(
     team_label: str, players: list[PlayerView], average_badge: str
 ) -> str:
+    """Formatteer één team als teksttabel."""
     rows = []
     for player in players:
         rows.append(
@@ -288,6 +297,7 @@ def _format_team_block(
 
 
 def _format_table(title: str, rows: list[dict[str, str]]) -> str:
+    """Maak een simpele aligned teksttabel."""
     if not rows:
         return f"{title}\n(no players found)"
 
@@ -307,18 +317,21 @@ def _format_table(title: str, rows: list[dict[str, str]]) -> str:
 
 
 def _hero_columns(players: list[PlayerView], prefix: str) -> dict[str, str]:
+    """Maak team_x_hero_1..6 kolommen."""
     hero_ids = [player.hero_id for player in players[:6]]
     padded = hero_ids + [""] * (6 - len(hero_ids))
     return {f"{prefix}_hero_{index}": hero_id for index, hero_id in enumerate(padded, start=1)}
 
 
 def _account_columns(players: list[PlayerView], prefix: str) -> dict[str, str]:
+    """Maak team_x_account_1..6 kolommen."""
     account_ids = [player.account_id for player in players[:6]]
     padded = account_ids + [""] * (6 - len(account_ids))
     return {f"{prefix}_account_{index}": value for index, value in enumerate(padded, start=1)}
 
 
 def _pp_score_columns(players: list[PlayerView], prefix: str) -> dict[str, str]:
+    """Maak team_x_pp_score_1..6 kolommen."""
     pp_scores = [player.pp_score for player in players[:6]]
     padded = pp_scores + ["Unknown"] * (6 - len(pp_scores))
     return {f"{prefix}_pp_score_{index}": value for index, value in enumerate(padded, start=1)}
@@ -332,6 +345,7 @@ def _player_value_columns(
     fallback: str,
     fallback_keys: tuple[str, ...] = (),
 ) -> dict[str, str]:
+    """Haal één spelerwaarde uit summary players en vul aan tot zes slots."""
     values: list[str] = []
     if isinstance(players, list):
         for player in players[:6]:
@@ -361,6 +375,7 @@ def _player_value_columns(
 
 
 def _string_or(value: Any, fallback: str) -> str:
+    """Zet waarde naar tekst of gebruik fallback bij leeg/None."""
     if value is None:
         return fallback
     text = str(value)
@@ -368,12 +383,14 @@ def _string_or(value: Any, fallback: str) -> str:
 
 
 def _string_or_empty(value: Any) -> str:
+    """Zet None om naar lege tekst."""
     if value is None:
         return ""
     return str(value)
 
 
 def _sorted_players(players: list[PlayerView]) -> list[PlayerView]:
+    """Sorteer spelers stabiel op slot en daarna account_id."""
     return sorted(
         players,
         key=lambda player: (
@@ -385,6 +402,7 @@ def _sorted_players(players: list[PlayerView]) -> list[PlayerView]:
 
 
 def _unwrap_match_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Haal bekende wrapper-dicts weg tot de echte match overblijft."""
     current = payload
     for key in ("data", "result", "match", "metadata", "match_info"):
         candidate = current.get(key)
@@ -394,6 +412,7 @@ def _unwrap_match_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def _find_players(node: Any, depth: int = 0) -> list[dict[str, Any]]:
+    """Zoek recursief naar een lijst die op spelers lijkt."""
     if depth > 5:
         return []
 
@@ -418,6 +437,7 @@ def _find_players(node: Any, depth: int = 0) -> list[dict[str, Any]]:
 
 
 def _looks_like_player_list(candidate: Any) -> bool:
+    """Controleer of een lijst genoeg spelerachtige dicts bevat."""
     if not isinstance(candidate, list) or not candidate:
         return False
     if not all(isinstance(item, dict) for item in candidate):
@@ -441,16 +461,19 @@ def _looks_like_player_list(candidate: Any) -> bool:
 
 
 def _extract_match_id(payload: dict[str, Any]) -> str:
+    """Haal match_id uit meerdere mogelijke veldnamen."""
     value = _pick_first(payload, "match_id", "matchId", "id")
     return str(value) if value is not None else "Unknown"
 
 
 def _extract_patch(payload: dict[str, Any]) -> str:
+    """Haal patch/build veld uit de API-payload."""
     value = _pick_first(payload, *_PATCH_KEYS)
     return str(value) if value is not None else "Unknown"
 
 
 def _extract_start_time(payload: dict[str, Any]) -> int | None:
+    """Parse starttijd als Unix seconden, ook vanuit datumtekst."""
     value = _pick_first(payload, "start_time", "start_time_s", "match_start_time")
     if value is None:
         return None
@@ -478,6 +501,7 @@ def _extract_start_time(payload: dict[str, Any]) -> int | None:
 
 
 def _resolve_patch(payload: dict[str, Any], start_time_s: int | None) -> tuple[str, str]:
+    """Gebruik expliciete patch of leid patch af uit starttijd."""
     explicit_patch = _extract_patch(payload)
     if explicit_patch != "Unknown":
         return explicit_patch, "explicit field in API response"
@@ -485,16 +509,19 @@ def _resolve_patch(payload: dict[str, Any], start_time_s: int | None) -> tuple[s
 
 
 def _format_start_time_utc(start_time_s: int | None) -> str:
+    """Formatteer Unix seconden als leesbare UTC-tijd."""
     if start_time_s is None:
         return "Unknown"
     return datetime.fromtimestamp(start_time_s, tz=UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
 
 def _extract_winner(payload: dict[str, Any]) -> Any:
+    """Haal winnaar uit meerdere mogelijke winner-velden."""
     return _pick_first(payload, *_WINNER_KEYS)
 
 
 def _extract_player_name(player: dict[str, Any], index: int) -> str:
+    """Haal spelernaam op of maak een fallbacknaam."""
     value = _pick_first(
         player,
         "player_name",
@@ -514,6 +541,7 @@ def _extract_player_name(player: dict[str, Any], index: int) -> str:
 
 
 def _extract_account_id(player: dict[str, Any], index: int) -> str:
+    """Haal account-id op of maak een unknown-id."""
     value = _pick_first(player, "account_id", "steam_account_id", "accountId")
     if value is not None:
         return str(value)
@@ -521,6 +549,7 @@ def _extract_account_id(player: dict[str, Any], index: int) -> str:
 
 
 def _extract_hero_id(player: dict[str, Any]) -> int | str | None:
+    """Haal hero-id uit directe of geneste hero velden."""
     direct = _pick_first(player, "hero_id", "heroId")
     if direct is not None:
         return direct
@@ -536,6 +565,7 @@ def _extract_hero_id(player: dict[str, Any]) -> int | str | None:
 
 
 def _extract_pp_score(player: dict[str, Any]) -> str:
+    """Haal ppScore/rank uit meerdere mogelijke speler-velden."""
     value = _pick_first(
         player,
         "pp_score",
@@ -566,6 +596,7 @@ def _extract_pp_score(player: dict[str, Any]) -> str:
 
 
 def _extract_player_slot(player: dict[str, Any]) -> int | None:
+    """Haal player_slot op als integer."""
     value = _pick_first(player, "player_slot", "playerSlot", "slot")
     if value is None:
         return None
@@ -576,6 +607,7 @@ def _extract_player_slot(player: dict[str, Any]) -> int | None:
 
 
 def _extract_team_key(player: dict[str, Any], fallback: str) -> str:
+    """Bepaal team_key van speler of gebruik fallback."""
     value = _pick_first(player, "team", "team_id", "player_team", "side", "side_id")
     if value is None:
         return _canonical_team_key(fallback)
@@ -596,6 +628,7 @@ def _extract_team_key(player: dict[str, Any], fallback: str) -> str:
 
 
 def _canonical_team_key(value: Any) -> str:
+    """Normaliseer teamnamen/nummers naar team_1 of team_2 waar mogelijk."""
     if isinstance(value, str):
         normalized = value.strip().lower().replace(" ", "_")
         if normalized in {"team0", "team_0", "0", "team_a", "hidden_king", "archon"}:
@@ -620,6 +653,7 @@ def _canonical_team_key(value: Any) -> str:
 
 
 def _humanize_team_label(team_key: str, fallback: str) -> str:
+    """Maak een leesbaar label van een interne team_key."""
     known = {
         "team_1": "Team 1",
         "team_2": "Team 2",
@@ -634,6 +668,7 @@ def _humanize_team_label(team_key: str, fallback: str) -> str:
 
 
 def _format_winner(winner: Any, team_1_key: str, team_2_key: str) -> str:
+    """Zet winnerwaarde om naar een leesbaar teamlabel."""
     if winner is None:
         return "Unknown"
 
@@ -670,6 +705,7 @@ def _format_winner(winner: Any, team_1_key: str, team_2_key: str) -> str:
 
 
 def _normalize_winner_index(winner: Any) -> int | None:
+    """Zet winnerwaarde om naar 0 voor team 1 of 1 voor team 2."""
     if isinstance(winner, bool):
         return 1 if winner else 0
 
@@ -690,6 +726,7 @@ def _normalize_winner_index(winner: Any) -> int | None:
 
 
 def _extract_average_badge(payload: dict[str, Any], team_key: str) -> str:
+    """Haal average_badge veld voor het gekozen team op."""
     badge_key_map = {
         "team_1": "average_badge_team0",
         "team_2": "average_badge_team1",
@@ -707,6 +744,7 @@ def _extract_average_badge(payload: dict[str, Any], team_key: str) -> str:
 
 
 def _pick_first(payload: dict[str, Any], *keys: str) -> Any:
+    """Pak de eerste bestaande, niet-None waarde uit meerdere keys."""
     for key in keys:
         if key in payload and payload[key] is not None:
             return payload[key]

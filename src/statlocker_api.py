@@ -1,13 +1,13 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-import json
-import os
-import socket
-from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+import json  # Request bodies en responses als JSON verwerken.
+import os  # STATLOCKER_API_KEY uit environment lezen.
+import socket  # Socket timeouts onderscheiden.
+from typing import Any  # API-payloads kunnen verschillende JSON-vormen hebben.
+from urllib.error import HTTPError, URLError  # HTTP- en netwerkfouten afhandelen.
+from urllib.request import Request, urlopen  # Standard-library HTTP requests.
 
-from env_utils import load_repo_env
+from env_utils import load_repo_env  # .env laden voor API key.
 
 
 DEFAULT_STATLOCKER_API_BASE = "https://statlocker.gg/api"
@@ -23,6 +23,7 @@ class StatlockerApiError(RuntimeError):
         status_code: int | None = None,
         retry_after_seconds: float | None = None,
     ) -> None:
+        """Bewaar foutmelding plus optionele HTTP-details."""
         super().__init__(message)
         self.status_code = status_code
         self.retry_after_seconds = retry_after_seconds
@@ -33,12 +34,14 @@ class StatlockerRateLimitError(StatlockerApiError):
 
 
 class StatlockerApiClient:
+    """Kleine client voor Statlocker profiel- en ppScore requests."""
     def __init__(
         self,
         api_base: str = DEFAULT_STATLOCKER_API_BASE,
         timeout_seconds: int = 45,
         api_key: str | None = None,
     ) -> None:
+        """Initialiseer Statlocker client en laad API key."""
         load_repo_env()
         self.api_base = api_base.rstrip("/")
         self.timeout_seconds = timeout_seconds
@@ -49,16 +52,20 @@ class StatlockerApiClient:
             )
 
     def fetch_profile(self, account_id: int | str) -> Any:
+        """Haal een Statlocker profiel voor één account op."""
         return self._get_json(f"{self.api_base}/public/profile/{account_id}")
 
     def fetch_batch_profiles(self, account_ids: list[int | str]) -> Any:
+        """Haal meerdere profielen in één POST request op."""
         return self._post_json(f"{self.api_base}/public/profiles", account_ids)
 
     def _get_json(self, url: str) -> Any:
+        """Maak een GET request en laat _read_json het uitvoeren."""
         request = Request(url, headers=self._headers(), method="GET")
         return self._read_json(request)
 
     def _post_json(self, url: str, payload: Any) -> Any:
+        """Maak een JSON POST request en laat _read_json het uitvoeren."""
         body = json.dumps(payload).encode("utf-8")
         headers = self._headers()
         headers["Content-Type"] = "application/json"
@@ -66,6 +73,7 @@ class StatlockerApiClient:
         return self._read_json(request)
 
     def _headers(self) -> dict[str, str]:
+        """Bouw headers inclusief Statlocker API key."""
         return {
             "Accept": "application/json",
             "User-Agent": "dl-team-comp-analyzer/0.1",
@@ -73,6 +81,7 @@ class StatlockerApiClient:
         }
 
     def _read_json(self, request: Request) -> Any:
+        """Voer request uit, behandel fouten en parse JSON."""
         try:
             with urlopen(request, timeout=self.timeout_seconds) as response:
                 body = response.read().decode("utf-8")

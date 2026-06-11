@@ -1,11 +1,11 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-import json
-import math
-from typing import Any
-from urllib.parse import urlencode
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+import json # API-response parsen.
+import math # etry-after schatten bij quota-info.
+from typing import Any # response kan dict, list, etc. zijn.
+from urllib.parse import urlencode # queryparameters correct omzetten naar URL.
+from urllib.error import HTTPError, URLError # netwerkfouten onderscheiden.
+from urllib.request import Request, urlopen # standard library HTTP.
 
 
 DEFAULT_GAME_API_BASE = "https://api.deadlock-api.com/v1"
@@ -20,6 +20,7 @@ class DeadlockApiError(RuntimeError):
         status_code: int | None = None,
         retry_after_seconds: float | None = None,
     ) -> None:
+        """Bewaar foutmelding plus optionele HTTP-details."""
         super().__init__(message)
         self.status_code = status_code
         self.retry_after_seconds = retry_after_seconds
@@ -30,15 +31,18 @@ class DeadlockRateLimitError(DeadlockApiError):
 
 
 class DeadlockApiClient:
+    """Kleine client voor Deadlock match metadata requests."""
     def __init__(
         self,
         game_api_base: str = DEFAULT_GAME_API_BASE,
         timeout_seconds: int = 20,
     ) -> None:
+        """Bewaar API-basisURL en timeout voor deze client."""
         self.game_api_base = game_api_base.rstrip("/")
         self.timeout_seconds = timeout_seconds
 
     def fetch_bulk_match_metadata(self, **query_params: Any) -> Any:
+        """Haal een batch match metadata op met query filters."""
         query = _encode_query_params(query_params)
         url = f"{self.game_api_base}/matches/metadata"
         if query:
@@ -46,6 +50,7 @@ class DeadlockApiClient:
         return self._get_json(url)
 
     def _get_json(self, url: str) -> Any:
+        """Voer een GET request uit en parse de JSON-response."""
         request = Request(
             url,
             headers={
@@ -88,7 +93,8 @@ class DeadlockApiClient:
         return payload
 
 
-def _encode_query_params(query_params: dict[str, Any]) -> str:
+def _encode_query_params(query_params: dict[str, Any]) -> str: # Deze functie maakt van Python-waarden een URL-querystring.
+    """Zet Python query parameters om naar een URL-querystring."""
     cleaned: list[tuple[str, str]] = []
     for key, value in query_params.items():
         if value is None:
@@ -110,6 +116,7 @@ def _encode_query_params(query_params: dict[str, Any]) -> str:
 
 
 def _extract_retry_after_seconds(exc: HTTPError, response_body: str) -> float | None:
+    """Lees of schat hoeveel seconden gewacht moet worden na rate limit."""
     retry_after = exc.headers.get("Retry-After")
     if retry_after:
         try:

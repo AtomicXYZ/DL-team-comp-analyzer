@@ -2316,59 +2316,16 @@ Hier werden varianten getest met:
 
 Het geselecteerde model gebruikt rank-context omdat de app moet reageren op absolute lobby rank.
 
-## 22. `scripts/download_hero_assets.py`
+## 22. Hero-afbeeldingen
 
-Dit script haalt hero-afbeeldingen op.
+De app gebruikt lokale hero-afbeeldingen uit:
 
-### 22.1 Defaults
+- `app/assets/heroes/`
+- `app/assets/hero_images.json`
 
-```python
-DEFAULT_HEROES_URL = "https://api.deadlock-api.com/v1/assets/heroes"
-DEFAULT_OUTPUT_DIR = Path("app/assets/heroes")
-DEFAULT_MANIFEST = Path("app/assets/hero_images.json")
-```
-
-Het script downloadt afbeeldingen naar `app/assets/heroes` en schrijft een manifest.
-
-### 22.2 Heroes ophalen
-
-```python
-heroes = fetch_json(args.heroes_url)
-```
-
-`fetch_json` verwacht een lijst van hero dicts.
-
-### 22.3 Filter op hero IDs
-
-```python
-allowed_ids = set(args.hero_ids or [])
-...
-if not hero_id or allowed_ids and hero_id not in allowed_ids:
-    continue
-```
-
-Als je `--hero-ids` meegeeft, downloadt het alleen die heroes.
-
-### 22.4 Image URL kiezen
-
-```python
-images = hero.get("images") or {}
-image_url = images.get(args.image_kind) or images.get(args.fallback_image_kind)
-```
-
-Eerst probeert het `icon_hero_card_webp`, anders fallback `icon_image_small_webp`.
-
-### 22.5 Manifest
-
-```python
-manifest[hero_id] = {
-    "name": str(hero.get("name") or f"Hero {hero_id}"),
-    "image": str(image_path.relative_to(args.manifest.parent)),
-    "source": image_url,
-}
-```
-
-De app gebruikt dit manifest om te weten welk bestand bij welke hero ID hoort.
+Het manifest zegt welk afbeeldingsbestand bij welke hero ID hoort. Als een
+afbeelding ontbreekt, toont de app automatisch een fallback-tegel met hero ID
+en naam.
 
 ## 23. `app/streamlit_app.py`
 
@@ -2764,4 +2721,3 @@ Daarom staat `--game-mode normal` in fetch commands.
 ## 27. Eén-zin samenvatting
 
 Dit project verzamelt patch-specifieke normale Deadlock matches, verrijkt ze met Statlocker ppScores, bouwt daaruit een trainbare dataset, traint een PyTorch neural network met hero embeddings en rankfeatures, en gebruikt dat model in een Streamlit webapp om zelf gekozen teamcomps te evalueren.
-

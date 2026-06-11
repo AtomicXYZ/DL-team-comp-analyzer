@@ -75,12 +75,8 @@ Run the Streamlit demo:
 The demo uses the rank-aware model and accepts either one average Statlocker
 ppScore per team or an individual ppScore for each selected hero.
 
-The app shows local hero portraits from `app/assets/heroes`. Refresh those
-assets from the Deadlock API with:
-
-```bash
-/root/DL-team-comp-analyzer/.venv/bin/python scripts/download_hero_assets.py
-```
+The app shows local hero portraits from `app/assets/heroes` using the manifest
+in `app/assets/hero_images.json`.
 
 ## Neural Model
 
@@ -225,7 +221,6 @@ STATLOCKER_API_KEY=your_key_here
 - `scripts/build_dataset.py`: convert JSONL matches to training CSV.
 - `scripts/train_neural_teamcomp.py`: train the PyTorch model.
 - `scripts/run_ppscore_context_experiments.py`: compare rank-context model hyperparameters.
-- `scripts/download_hero_assets.py`: download hero portraits for the Streamlit app.
 - `scripts/extract_accounts.py`: optional account list for Statlocker.
 - `scripts/fetch_pp_scores.py`: optional Statlocker ppScore fetch.
 - `scripts/common.py`: shared file helpers and paths.

@@ -1,10 +1,11 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-import os
-from pathlib import Path
+import os  # Environment variables lezen en zetten.
+from pathlib import Path  # Pad naar repo-root en .env bepalen.
 
 
 def load_repo_env() -> None:
+    """Laad key=value regels uit .env in os.environ zonder bestaande waarden te overschrijven."""
     repo_root = Path(__file__).resolve().parents[1]
     env_path = repo_root / ".env"
     if not env_path.exists():

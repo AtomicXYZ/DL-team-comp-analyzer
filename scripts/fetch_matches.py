@@ -1,37 +1,38 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-import argparse
-import time
-from pathlib import Path
-from typing import Any
+import argparse  # Command-line opties parsen.
+import time  # Wachten tussen requests en bij fouten.
+from pathlib import Path  # Bestandspaden voor output/state.
+from typing import Any  # API payloads kunnen verschillende JSON-vormen hebben.
 
-from common import CURRENT_PATCH, FETCH_STATE_PATH, MATCHES_PATH, append_jsonl, load_json, read_jsonl, write_json
+from common import CURRENT_PATCH, FETCH_STATE_PATH, MATCHES_PATH, append_jsonl, load_json, read_jsonl, write_json  # Gedeelde paden en file helpers.
 
-from bulk_extract import extract_match_payloads
+from bulk_extract import extract_match_payloads  # Haalt losse match-dicts uit API-response.
 from deadlock_api import (
-    DeadlockApiClient,
-    DeadlockApiError,
-    DeadlockRateLimitError,
+    DeadlockApiClient,  # Client die Deadlock API requests uitvoert.
+    DeadlockApiError,  # Algemene Deadlock API-fout.
+    DeadlockRateLimitError,  # Specifieke fout voor HTTP 429/rate limits.
 )
-from match_parser import build_match_view, match_view_to_dict
+from match_parser import build_match_view, match_view_to_dict  # Raw match -> nette dict.
 
 
 def parse_args() -> argparse.Namespace:
+    """Lees fetch-instellingen uit de command line."""
     parser = argparse.ArgumentParser(description="Fetch normal Deadlock matches for one gameplay patch.")
-    parser.add_argument("--output", type=Path, default=MATCHES_PATH)
-    parser.add_argument("--state-file", type=Path, default=FETCH_STATE_PATH)
-    parser.add_argument("--target-count", type=int, default=10000)
-    parser.add_argument("--batch-size", type=int, default=100)
-    parser.add_argument("--timeout-seconds", type=int, default=45)
-    parser.add_argument("--sleep-seconds", type=float, default=0.35)
-    parser.add_argument("--rate-limit-sleep-seconds", type=float, default=10.0)
-    parser.add_argument("--request-error-sleep-seconds", type=float, default=10.0)
-    parser.add_argument("--max-consecutive-errors", type=int, default=5)
-    parser.add_argument("--resume", action="store_true")
-    parser.add_argument("--max-batches", type=int)
-    parser.add_argument("--min-match-id", type=int)
-    parser.add_argument("--max-match-id", type=int)
-    parser.add_argument("--order-direction", choices=("asc", "desc"), default="desc")
+    parser.add_argument("--output", type=Path, default=MATCHES_PATH)  # JSONL-bestand voor opgeslagen matches.
+    parser.add_argument("--state-file", type=Path, default=FETCH_STATE_PATH)  # JSON-state om met --resume door te gaan.
+    parser.add_argument("--target-count", type=int, default=10000)  # Stop als dit aantal unieke matches is bereikt.
+    parser.add_argument("--batch-size", type=int, default=100)  # Aantal matches per API-request.
+    parser.add_argument("--timeout-seconds", type=int, default=45)  # Maximale wachttijd per request.
+    parser.add_argument("--sleep-seconds", type=float, default=0.35)  # Pauze tussen succesvolle batches.
+    parser.add_argument("--rate-limit-sleep-seconds", type=float, default=10.0)  # Fallback-wachttijd bij rate limit.
+    parser.add_argument("--request-error-sleep-seconds", type=float, default=10.0)  # Wachttijd na gewone API-fout.
+    parser.add_argument("--max-consecutive-errors", type=int, default=5)  # Stop na zoveel opeenvolgende fouten.
+    parser.add_argument("--resume", action="store_true")  # Lees state-file en ga verder waar vorige run stopte.
+    parser.add_argument("--max-batches", type=int)  # Optioneel maximaal aantal batches voor test runs.
+    parser.add_argument("--min-match-id", type=int)  # Ondergrens voor match_id filter.
+    parser.add_argument("--max-match-id", type=int)  # Bovengrens voor match_id filter.
+    parser.add_argument("--order-direction", choices=("asc", "desc"), default="desc")  # Nieuw naar oud of oud naar nieuw.
     parser.add_argument(
         "--required-patch",
         default=CURRENT_PATCH,
@@ -52,6 +53,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Haal batches matches op, filter ze en schrijf ze naar JSONL."""
     args = parse_args()
     client = DeadlockApiClient(timeout_seconds=args.timeout_seconds)
     existing_match_ids = {str(match.get("match_id")) for match in read_jsonl(args.output)}
@@ -155,6 +157,7 @@ def normalize_matches(
     allow_missing_start_time: bool,
     required_patch: str | None,
 ) -> tuple[list[dict[str, Any]], int]:
+    """Parse raw matches, verwijder duplicates en filter op patch/starttijd."""
     summaries: list[dict[str, Any]] = []
     skipped_other_patch = 0
     for raw_match in raw_matches:
@@ -175,6 +178,7 @@ def normalize_matches(
 
 
 def extract_match_id(raw_match: dict[str, Any]) -> int | None:
+    """Haal match_id uit een raw match of geneste match_info."""
     candidates = [raw_match]
     if isinstance(raw_match.get("match_info"), dict):
         candidates.append(raw_match["match_info"])

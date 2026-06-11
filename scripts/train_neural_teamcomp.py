@@ -1,18 +1,18 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-import argparse
-import csv
-import json
-import math
-import random
-from dataclasses import asdict, dataclass
-from pathlib import Path
-from typing import Any
+import argparse  # Command-line opties parsen.
+import csv  # Dataset CSV lezen.
+import json  # Modelmetadata schrijven.
+import math  # Log loss veilig berekenen.
+import random  # Random split en seeding.
+from dataclasses import asdict, dataclass  # Config als simpel data-object bewaren.
+from pathlib import Path  # Bestandspaden voor dataset/model.
+from typing import Any  # Metadata en CSV-waarden kunnen gemengd zijn.
 
-import numpy as np
-import torch
-from torch import nn
-from torch.utils.data import DataLoader, Dataset
+import numpy as np  # NumPy random seed zetten.
+import torch  # PyTorch tensors, training en model opslaan.
+from torch import nn  # Neural-network lagen en losses.
+from torch.utils.data import DataLoader, Dataset  # Batching en dataset-interface.
 
 
 DEFAULT_DATASET = Path("data/team_comp_dataset_2026-05-22.csv")
@@ -21,6 +21,7 @@ DEFAULT_MODEL = Path("models/2026-05-22/neural_teamcomp_heroes_only.pt")
 
 @dataclass
 class ModelConfig:
+    """Instellingen die nodig zijn om hetzelfde model later te laden."""
     embedding_dim: int
     hidden_dim: int
     dropout: float
@@ -33,6 +34,7 @@ class ModelConfig:
 
 
 class TeamCompDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]]):
+    """PyTorch dataset die CSV-rijen omzet naar tensors voor training."""
     def __init__(
         self,
         rows: list[dict[str, str]],
@@ -42,6 +44,7 @@ class TeamCompDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor, to
         use_pp_score: bool,
         augment_swap: bool,
     ) -> None:
+        """Bouw samples met hero indices, extra features en target winnaar."""
         self.samples: list[tuple[list[int], list[int], list[float], float]] = []
         for row in rows:
             team_1 = [hero_to_index[row[f"team_1_hero_{index}"]] for index in range(1, 7)]
@@ -58,9 +61,11 @@ class TeamCompDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor, to
                 self.samples.append((team_2, team_1, swapped_extra, 1.0 - target))
 
     def __len__(self) -> int:
+        """Geef het aantal trainingssamples."""
         return len(self.samples)
 
     def __getitem__(self, index: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Geef één sample terug als PyTorch tensors."""
         team_1, team_2, extra, target = self.samples[index]
         return (
             torch.tensor(team_1, dtype=torch.long),
@@ -71,7 +76,9 @@ class TeamCompDataset(Dataset[tuple[torch.Tensor, torch.Tensor, torch.Tensor, to
 
 
 class TeamCompNet(nn.Module):
+    """Neuraal netwerk dat team 2 win-kans voorspelt uit heroes en context."""
     def __init__(self, config: ModelConfig) -> None:
+        """Maak embedding-laag en feed-forward netwerk."""
         super().__init__()
         self.config = config
         self.hero_embedding = nn.Embedding(config.num_heroes, config.embedding_dim)
@@ -92,6 +99,7 @@ class TeamCompNet(nn.Module):
         team_2: torch.Tensor,
         extra: torch.Tensor,
     ) -> torch.Tensor:
+        """Bereken logits voor team 2 winst."""
         team_1_embeddings = self.hero_embedding(team_1)
         team_2_embeddings = self.hero_embedding(team_2)
         team_1_mean = team_1_embeddings.mean(dim=1)
@@ -114,6 +122,7 @@ class TeamCompNet(nn.Module):
         team_1_mean: torch.Tensor,
         team_2_mean: torch.Tensor,
     ) -> list[torch.Tensor]:
+        """Maak feature-vectoren uit team embeddings."""
         features = [
             team_1_mean,
             team_2_mean,
@@ -141,6 +150,7 @@ class TeamCompNet(nn.Module):
 
     @staticmethod
     def _encoded_dim(config: ModelConfig) -> int:
+        """Bereken hoeveel embedding-features de gekozen architectuur oplevert."""
         if config.architecture == "mean":
             return config.embedding_dim * 5
         if config.architecture == "pool":
@@ -151,33 +161,35 @@ class TeamCompNet(nn.Module):
 
 
 def parse_args() -> argparse.Namespace:
+    """Lees trainingsinstellingen uit de command line."""
     parser = argparse.ArgumentParser(description="Train a PyTorch neural network for Deadlock team comps.")
-    parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)
-    parser.add_argument("--model-output", type=Path, default=DEFAULT_MODEL)
-    parser.add_argument("--epochs", type=int, default=35)
-    parser.add_argument("--batch-size", type=int, default=256)
-    parser.add_argument("--learning-rate", type=float, default=0.001)
-    parser.add_argument("--weight-decay", type=float, default=0.0001)
-    parser.add_argument("--l1-lambda", type=float, default=0.0)
-    parser.add_argument("--grad-clip", type=float, default=1.0)
-    parser.add_argument("--embedding-dim", type=int, default=16)
-    parser.add_argument("--hidden-dim", type=int, default=128)
-    parser.add_argument("--dropout", type=float, default=0.15)
-    parser.add_argument("--architecture", choices=("mean", "pool", "matchup"), default="mean")
-    parser.add_argument("--activation", choices=("relu", "gelu", "silu"), default="relu")
-    parser.add_argument("--test-fraction", type=float, default=0.2)
-    parser.add_argument("--validation-fraction", type=float, default=0.15)
-    parser.add_argument("--patience", type=int, default=8)
-    parser.add_argument("--min-delta", type=float, default=0.0001)
-    parser.add_argument("--split", choices=("time", "random"), default="time")
-    parser.add_argument("--use-badge", action="store_true")
-    parser.add_argument("--use-pp-score", action="store_true")
-    parser.add_argument("--no-swap-augmentation", action="store_true")
-    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)  # CSV dataset om te trainen.
+    parser.add_argument("--model-output", type=Path, default=DEFAULT_MODEL)  # .pt modelbestand dat geschreven wordt.
+    parser.add_argument("--epochs", type=int, default=35)  # Maximaal aantal training epochs.
+    parser.add_argument("--batch-size", type=int, default=256)  # Aantal samples per optimizer stap.
+    parser.add_argument("--learning-rate", type=float, default=0.001)  # AdamW learning rate.
+    parser.add_argument("--weight-decay", type=float, default=0.0001)  # L2 regularisatie via AdamW.
+    parser.add_argument("--l1-lambda", type=float, default=0.0)  # Extra L1 regularisatie.
+    parser.add_argument("--grad-clip", type=float, default=1.0)  # Maximale gradient norm.
+    parser.add_argument("--embedding-dim", type=int, default=16)  # Grootte van hero embeddings.
+    parser.add_argument("--hidden-dim", type=int, default=128)  # Grootte van hidden layer.
+    parser.add_argument("--dropout", type=float, default=0.15)  # Dropout tegen overfitting.
+    parser.add_argument("--architecture", choices=("mean", "pool", "matchup"), default="mean")  # Welke team encoding gebruikt wordt.
+    parser.add_argument("--activation", choices=("relu", "gelu", "silu"), default="relu")  # Activatiefunctie tussen layers.
+    parser.add_argument("--test-fraction", type=float, default=0.2)  # Deel van data voor testset.
+    parser.add_argument("--validation-fraction", type=float, default=0.15)  # Deel van train-rest voor validatie.
+    parser.add_argument("--patience", type=int, default=8)  # Early stopping na zoveel slechte epochs.
+    parser.add_argument("--min-delta", type=float, default=0.0001)  # Minimale validatieverbetering.
+    parser.add_argument("--split", choices=("time", "random"), default="time")  # Tijdgebaseerde of random split.
+    parser.add_argument("--use-badge", action="store_true")  # Voeg average badge features toe.
+    parser.add_argument("--use-pp-score", action="store_true")  # Voeg ppScore features toe.
+    parser.add_argument("--no-swap-augmentation", action="store_true")  # Zet team-swap augmentatie uit.
+    parser.add_argument("--seed", type=int, default=42)  # Seed voor reproduceerbaarheid.
     return parser.parse_args()
 
 
 def main() -> int:
+    """Train model, evalueer splits en schrijf model plus metadata."""
     args = parse_args()
     set_seed(args.seed)
     rows = load_rows(args.dataset)
@@ -357,6 +369,7 @@ def main() -> int:
 
 
 def load_rows(path: Path) -> list[dict[str, str]]:
+    """Lees bruikbare CSV-rijen met winnaar en 12 hero picks."""
     rows: list[dict[str, str]] = []
     with path.open("r", encoding="utf-8", newline="") as file:
         for row in csv.DictReader(file):
@@ -378,6 +391,7 @@ def split_rows(
     split: str,
     seed: int,
 ) -> tuple[list[dict[str, str]], list[dict[str, str]], list[dict[str, str]]]:
+    """Splits rijen in train, validatie en test."""
     rows = list(rows)
     if split == "time":
         rows.sort(key=lambda row: int_or_zero(row.get("start_time_s")))
@@ -390,6 +404,7 @@ def split_rows(
 
 
 def build_hero_vocab(rows: list[dict[str, str]]) -> dict[str, int]:
+    """Maak mapping hero_id -> embedding index."""
     hero_ids = sorted(
         {
             row[f"team_{team}_hero_{index}"]
@@ -403,6 +418,7 @@ def build_hero_vocab(rows: list[dict[str, str]]) -> dict[str, int]:
 
 
 def extra_features(row: dict[str, str], *, use_badge: bool, use_pp_score: bool) -> list[float]:
+    """Combineer optionele badge- en ppScore-features."""
     features: list[float] = []
     if use_badge:
         features.extend(badge_features(row))
@@ -412,10 +428,12 @@ def extra_features(row: dict[str, str], *, use_badge: bool, use_pp_score: bool) 
 
 
 def extra_feature_dim(use_badge: bool, use_pp_score: bool) -> int:
+    """Bereken hoeveel extra numerieke features worden toegevoegd."""
     return (1 if use_badge else 0) + (6 if use_pp_score else 0)
 
 
 def swap_extra_features(features: list[float], *, use_badge: bool, use_pp_score: bool) -> list[float]:
+    """Draai team-gerichte extra features om voor swap augmentatie."""
     swapped: list[float] = []
     index = 0
     if use_badge:
@@ -437,6 +455,7 @@ def swap_extra_features(features: list[float], *, use_badge: bool, use_pp_score:
 
 
 def badge_features(row: dict[str, str]) -> list[float]:
+    """Maak feature voor verschil in average badge tussen teams."""
     team_1_badge = int_or_none(row.get("team_1_average_badge"))
     team_2_badge = int_or_none(row.get("team_2_average_badge"))
     if team_1_badge is None or team_2_badge is None:
@@ -445,6 +464,7 @@ def badge_features(row: dict[str, str]) -> list[float]:
 
 
 def pp_score_features(row: dict[str, str]) -> list[float]:
+    """Maak features voor ppScore verschil, spreiding en dekking."""
     team_1_scores = [
         value
         for index in range(1, 7)
@@ -474,6 +494,7 @@ def pp_score_features(row: dict[str, str]) -> list[float]:
 
 
 def pairwise_summary(team_1_embeddings: torch.Tensor, team_2_embeddings: torch.Tensor) -> torch.Tensor:
+    """Vat hero-vs-hero matchups en team synergy samen."""
     matchup = torch.matmul(team_1_embeddings, team_2_embeddings.transpose(1, 2))
     team_1_synergy = torch.matmul(team_1_embeddings, team_1_embeddings.transpose(1, 2))
     team_2_synergy = torch.matmul(team_2_embeddings, team_2_embeddings.transpose(1, 2))
@@ -494,6 +515,7 @@ def pairwise_summary(team_1_embeddings: torch.Tensor, team_2_embeddings: torch.T
 
 
 def activation_layer(name: str) -> nn.Module:
+    """Maak de gekozen activatielaag."""
     if name == "relu":
         return nn.ReLU()
     if name == "gelu":
@@ -504,6 +526,7 @@ def activation_layer(name: str) -> nn.Module:
 
 
 def l1_penalty(model: nn.Module) -> torch.Tensor:
+    """Bereken L1 penalty over trainbare non-bias parameters."""
     penalty = torch.zeros((), device=next(model.parameters()).device)
     for name, parameter in model.named_parameters():
         if parameter.requires_grad and "bias" not in name:
@@ -513,6 +536,7 @@ def l1_penalty(model: nn.Module) -> torch.Tensor:
 
 @torch.no_grad()
 def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> dict[str, float]:
+    """Bereken accuracy en log loss zonder gradients."""
     model.eval()
     correct = 0
     total = 0
@@ -544,6 +568,7 @@ def evaluate(model: nn.Module, loader: DataLoader, device: torch.device) -> dict
 
 
 def int_or_none(value: Any) -> int | None:
+    """Parse int of geef None terug."""
     try:
         return int(str(value).strip())
     except (TypeError, ValueError):
@@ -551,10 +576,12 @@ def int_or_none(value: Any) -> int | None:
 
 
 def int_or_zero(value: Any) -> int:
+    """Parse int of gebruik 0 als fallback."""
     return int_or_none(value) or 0
 
 
 def set_seed(seed: int) -> None:
+    """Zet random seeds voor reproduceerbare runs."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -563,6 +590,7 @@ def set_seed(seed: int) -> None:
 
 
 def stringify_paths(payload: dict[str, Any]) -> dict[str, Any]:
+    """Zet Path-objecten om naar tekst voor JSON metadata."""
     return {key: str(value) if isinstance(value, Path) else value for key, value in payload.items()}
 
 

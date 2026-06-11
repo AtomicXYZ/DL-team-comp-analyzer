@@ -1,11 +1,12 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-from dataclasses import dataclass
-from datetime import UTC, datetime
+from dataclasses import dataclass  # Kleine data-objecten voor patch releases.
+from datetime import UTC, datetime  # Patch-tijden in UTC vergelijken.
 
 
 @dataclass(frozen=True)
 class PatchRelease:
+    """Eén bekende patch met naam, starttijd en bron."""
     patch_name: str
     effective_from_utc: datetime
     source: str
@@ -128,6 +129,7 @@ LATEST_PATCH_NAME = PATCH_RELEASES[0].patch_name
 
 
 def infer_patch_from_start_time(start_time_s: int | None) -> tuple[str, str]:
+    """Bepaal patchnaam op basis van Unix starttijd van een match."""
     if start_time_s is None:
         return "Unknown", "missing start_time"
 

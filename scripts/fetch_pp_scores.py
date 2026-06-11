@@ -1,35 +1,37 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-import argparse
-import sys
-import time
-import traceback
-from pathlib import Path
-from typing import Any
+import argparse  # Command-line opties parsen.
+import sys  # Fouten naar stderr schrijven.
+import time  # Wachten tussen requests en bij rate limits.
+import traceback  # Onverwachte fouten volledig loggen.
+from pathlib import Path  # Bestandspaden voor input/output/logs.
+from typing import Any  # API-payload kan verschillende JSON-vormen hebben.
 
-from common import ACCOUNTS_PATH, PP_SCORES_PATH, chunked, load_json, read_ids, write_json
+from common import ACCOUNTS_PATH, PP_SCORES_PATH, chunked, load_json, read_ids, write_json  # Gedeelde paden en file helpers.
 
 from statlocker_api import (
-    StatlockerApiClient,
-    StatlockerApiError,
-    StatlockerRateLimitError,
+    StatlockerApiClient,  # Client die Statlocker requests uitvoert.
+    StatlockerApiError,  # Algemene Statlocker API-fout.
+    StatlockerRateLimitError,  # Specifieke fout voor HTTP 429/rate limits.
 )
 
 
 def parse_args() -> argparse.Namespace:
+    """Lees instellingen voor ppScore-fetching uit de terminal."""
     parser = argparse.ArgumentParser(description="Fetch Statlocker ppScore values for account IDs.")
-    parser.add_argument("--accounts", type=Path, default=ACCOUNTS_PATH)
-    parser.add_argument("--output", type=Path, default=PP_SCORES_PATH)
-    parser.add_argument("--log-file", type=Path, default=Path("data/fetch_pp_scores.log"))
-    parser.add_argument("--batch-size", type=int, default=100)
-    parser.add_argument("--timeout-seconds", type=int, default=45)
-    parser.add_argument("--sleep-seconds", type=float, default=0.1)
-    parser.add_argument("--rate-limit-sleep-seconds", type=float, default=300.0)
-    parser.add_argument("--limit-accounts", type=int)
+    parser.add_argument("--accounts", type=Path, default=ACCOUNTS_PATH)  # Tekstbestand met account IDs.
+    parser.add_argument("--output", type=Path, default=PP_SCORES_PATH)  # JSON-cache die ppScores bewaart.
+    parser.add_argument("--log-file", type=Path, default=Path("data/fetch_pp_scores.log"))  # Logbestand voor voortgang/fouten.
+    parser.add_argument("--batch-size", type=int, default=100)  # Aantal accounts per batch-request.
+    parser.add_argument("--timeout-seconds", type=int, default=45)  # Maximale wachttijd per API-request.
+    parser.add_argument("--sleep-seconds", type=float, default=0.1)  # Pauze tussen batches.
+    parser.add_argument("--rate-limit-sleep-seconds", type=float, default=300.0)  # Fallback-wachttijd bij rate limit.
+    parser.add_argument("--limit-accounts", type=int)  # Optioneel alleen de eerste N accounts verwerken.
     return parser.parse_args()
 
 
 def main() -> int:
+    """Start het script en log onverwachte fouten netjes."""
     args = parse_args()
     try:
         return run(args)
@@ -45,6 +47,7 @@ def main() -> int:
 
 
 def run(args: argparse.Namespace) -> int:
+    """Haal ontbrekende ppScores op en werk de cache per batch bij."""
     accounts = read_ids(args.accounts)
     if args.limit_accounts is not None:
         accounts = accounts[: args.limit_accounts]
@@ -88,6 +91,7 @@ def run(args: argparse.Namespace) -> int:
 
 
 def extract_pp_scores(payload: Any) -> dict[str, int]:
+    """Haal account_id -> ppScore uit de Statlocker response."""
     profiles = payload if isinstance(payload, list) else []
     pp_scores: dict[str, int] = {}
     for profile in profiles:
@@ -104,6 +108,7 @@ def extract_pp_scores(payload: Any) -> dict[str, int]:
 
 
 def log_message(path: Path, message: str) -> None:
+    """Schrijf een bericht naar logbestand en terminal."""
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as file:
         file.write(message + "\n")

@@ -1,11 +1,11 @@
-from __future__ import annotations
+from __future__ import annotations  # Maakt moderne type hints mogelijk.
 
-import argparse
-import csv
-import json
-import subprocess
-import sys
-from pathlib import Path
+import argparse  # Command-line opties parsen.
+import csv  # Samenvatting als CSV schrijven.
+import json  # Modelmetadata na elke run lezen.
+import subprocess  # Trainingsscript als aparte processen starten.
+import sys  # Huidige Python executable gebruiken.
+from pathlib import Path  # Bestandspaden voor dataset/models.
 
 
 DEFAULT_DATASET = Path("data/team_comp_dataset_2026-05-22.csv")
@@ -57,15 +57,17 @@ EXPERIMENTS = [
 
 
 def parse_args() -> argparse.Namespace:
+    """Lees instellingen voor ppScore-context experimenten."""
     parser = argparse.ArgumentParser(description="Tune rank-context ppScore models on the current patch.")
-    parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)
-    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
-    parser.add_argument("--name-suffix", default="", help="Append a label such as _complete to output names.")
-    parser.add_argument("--limit", type=int, help="Run only the first N candidates.")
+    parser.add_argument("--dataset", type=Path, default=DEFAULT_DATASET)  # CSV dataset voor alle experimenten.
+    parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)  # Map voor modellen en summary.
+    parser.add_argument("--name-suffix", default="", help="Append a label such as _complete to output names.")  # Label achter outputnamen.
+    parser.add_argument("--limit", type=int, help="Run only the first N candidates.")  # Optioneel alleen eerste N configs.
     return parser.parse_args()
 
 
 def main() -> int:
+    """Run ppScore-context configs en schrijf een summary CSV."""
     args = parse_args()
     trainer = Path(__file__).resolve().parent / "train_neural_teamcomp.py"
     args.output_dir.mkdir(parents=True, exist_ok=True)
