@@ -108,8 +108,8 @@ team comparison features
 MLP -> probability that team 2 wins
 ```
 
-The heroes-only model remains the baseline. The current Streamlit model is a
-rank-aware ppScore context model trained on the `20000` match dataset:
+The current Streamlit model is a rank-aware ppScore context model trained on
+the `20000` match dataset:
 
 - model file: `models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt`
 - architecture: `pool`
@@ -119,13 +119,6 @@ rank-aware ppScore context model trained on the `20000` match dataset:
 - validation log loss: `0.6611`
 - test accuracy: `0.6082`
 - test log loss: `0.6573`
-
-Baseline `2026-05-22` heroes-only result:
-
-- architecture: `pool`
-- best validation epoch: `12`
-- test accuracy: `0.5885`
-- test log loss: `0.6741`
 
 ## Historical Model Comparisons
 
@@ -153,9 +146,8 @@ Re-run that focused sweep with:
 ```
 
 A corrected comparison on only the `2698` fully ranked matches did not improve
-validation performance: the best ppScore context model reached validation log
-loss `0.6877`, versus `0.6860` for heroes-only on that subset. The app
-therefore keeps the `20000`-match context model with partial ppScore coverage.
+validation performance. The app therefore keeps the `20000`-match context model
+with partial ppScore coverage.
 
 ## Limitations
 
@@ -237,7 +229,6 @@ Old v1/debug scripts were removed to keep the project focused.
 
 ## Saved Models
 
-- `models/2026-05-22/neural_teamcomp_heroes_only.pt`: heroes-only baseline model.
 - `models/2026-05-22/neural_teamcomp_heroes_ppscore_partial.pt`: relative-only rank-aware comparison model.
 - `models/2026-05-22/neural_teamcomp_heroes_ppscore_context.pt`: context-aware rank model used by the Streamlit app.
 - `models/2026-05-22/experiments/`: new-patch comparisons as they are trained.

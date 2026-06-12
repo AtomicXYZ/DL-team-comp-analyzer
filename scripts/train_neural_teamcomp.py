@@ -269,10 +269,10 @@ def main() -> int:
             loss = criterion(logits, target)
             if args.l1_lambda > 0:
                 loss = loss + args.l1_lambda * l1_penalty(model)
-            loss.backward()
+            loss.backward() # backward pass
             if args.grad_clip > 0:
                 nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
-            optimizer.step()
+            optimizer.step() # weight update
             train_loss += loss.item() * target.size(0)
 
         train_metrics = evaluate(model, train_loader, device)

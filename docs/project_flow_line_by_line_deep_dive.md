@@ -2233,64 +2233,11 @@ return {
 
 `positive_rate` vertelt hoeveel echte team-2-wins er zijn. Dat helpt om te checken of de dataset ongeveer gebalanceerd is.
 
-## 21. Experiment runners
+## 21. Experiment runner
 
-### 21.1 `scripts/run_neural_experiments.py`
+### 21.1 `scripts/run_ppscore_context_experiments.py`
 
-Dit script test heroes-only modellen.
-
-Het bevat een lijst configs:
-
-```python
-EXPERIMENTS = [
-    {
-        "name": "pool_regularized",
-        "epochs": "80",
-        "embedding_dim": "16",
-        "hidden_dim": "96",
-        "dropout": "0.40",
-        "architecture": "pool",
-        "learning_rate": "0.0005",
-        "weight_decay": "0.002",
-        "l1_lambda": "0.0000005",
-    },
-    ...
-]
-```
-
-Per experiment bouwt het een command:
-
-```python
-command = [
-    sys.executable,
-    str(script),
-    "--dataset",
-    str(args.dataset),
-    "--model-output",
-    str(model_path),
-    ...
-]
-```
-
-Daarna:
-
-```python
-result = subprocess.run(command, check=False)
-```
-
-Het script start dus het trainingsscript als subprocess.
-
-Na training leest het metadata:
-
-```python
-metadata = json.loads(model_path.with_suffix(".json").read_text(encoding="utf-8"))
-```
-
-en schrijft een summary CSV.
-
-### 21.2 `scripts/run_ppscore_context_experiments.py`
-
-Dit doet hetzelfde, maar met `--use-pp-score`.
+Dit script draait meerdere rank-context trainingsruns met `--use-pp-score`.
 
 Belangrijk:
 

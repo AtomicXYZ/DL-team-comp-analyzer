@@ -64,7 +64,6 @@ scripts/
   fetch_pp_scores.py            Haalt Statlocker ppScores op.
   build_dataset.py              Bouwt CSV voor training.
   train_neural_teamcomp.py      Traint het PyTorch-model.
-  run_neural_experiments.py     Draait meerdere heroes-only experimenten.
   run_ppscore_context_experiments.py Draait meerdere rank-aware experimenten.
 
 src/
@@ -1002,30 +1001,11 @@ Daarom is log loss vaak belangrijker dan pure accuracy.
 
 ## 22. Experimenten
 
-Bestanden:
+Bestand:
 
-- `scripts/run_neural_experiments.py`
 - `scripts/run_ppscore_context_experiments.py`
 
-Deze scripts draaien meerdere trainingscommando's na elkaar.
-
-Voor heroes-only:
-
-```python
-EXPERIMENTS = [
-    {
-        "name": "pool_regularized",
-        "embedding_dim": "16",
-        "hidden_dim": "96",
-        "dropout": "0.40",
-        "architecture": "pool",
-        "learning_rate": "0.0005",
-        "weight_decay": "0.002",
-        "l1_lambda": "0.0000005",
-    },
-    ...
-]
-```
+Dit script draait meerdere rank-context trainingscommando's na elkaar.
 
 Voor ppScore-context:
 
@@ -1443,9 +1423,6 @@ scripts/build_dataset.py
 
 scripts/train_neural_teamcomp.py
   Bevat Dataset, modelarchitectuur, loss, training en evaluatie.
-
-scripts/run_neural_experiments.py
-  Batch-runner voor heroes-only modellen.
 
 scripts/run_ppscore_context_experiments.py
   Batch-runner voor rank-aware modellen.
